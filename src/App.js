@@ -48,7 +48,7 @@ class App extends React.Component {
       });
     } else {
       // For handicapped checkbox, have to make sure that seperateHandicapped
-      // checkbox is unticked when handicapped checkbox is ticked.
+      // checkbox is unticked when handicapped checkbox is unticked.
       this.setState({
         [event.target.name]: value,
         seperateHandicapped: value && this.state.seperateHandicapped,
