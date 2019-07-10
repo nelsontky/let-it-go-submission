@@ -1,5 +1,5 @@
 import React from 'react';
-import Map from './map';
+import Map from './components/map';
 import Layout from './components/layout';
 import firebase from './utils/firebase';
 import Resizer from 'react-image-file-resizer';
@@ -87,11 +87,16 @@ class App extends React.Component {
 
   handleSubmit(event) {
     event.preventDefault();
-    console.log(this.fileInput.current.files[0]);
-    if (!(/image\/*/g).test(this.fileInput.current.files[0].type)) {
-      alert("Please upload an image");
+
+    // Ensures that file uploaded is an image. Does not work if file format
+    // was changed manually but submit will still not work, just that this
+    // warning will not show too.
+    if (!/image\/*/g.test(this.fileInput.current.files[0].type)) {
+      alert('Please make sure file uploaded is an image');
     }
 
+    // Paranomas are thrown onto the root of the firebase storage and files
+    // are named after the input name.
     const picRef = this.storage.ref().child(this.state.name);
 
     // Resize images to max width of 4096 to support mobile
@@ -233,7 +238,7 @@ class App extends React.Component {
 
           <br />
           <label>
-            Select a paranoma image:{' '}
+            Select a paranoma image:<br />
             <input
               type="file"
               name="paranomaPath"
@@ -243,12 +248,14 @@ class App extends React.Component {
           </label>
           <br />
 
+          <br />
           <input
             type="submit"
             disabled={
               this.state.name === '' ||
               this.state.lat === 0 ||
-              this.state.lon === 0
+              this.state.lon === 0 ||
+              this.fileInput.current.files[0] == null
             }
             value="Submit"
           />
