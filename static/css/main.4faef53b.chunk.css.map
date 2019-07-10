@@ -1,0 +1,1 @@
+{"version":3,"sources":["input.css"],"names":[],"mappings":"AAAA,iBACE,UAAW,CACX,YAAa,CACb,oBAAqB,CACrB,qBAAsB,CACtB,iBAAkB,CAClB,qBACF","file":"main.4faef53b.chunk.css","sourcesContent":["input[type='text'] {\n  width: 100%;\n  margin: 8px 0;\n  display: inline-block;\n  border: 1px solid #ccc;\n  border-radius: 4px;\n  box-sizing: border-box;\n}\n"]}
