@@ -2,6 +2,7 @@ import React from 'react';
 import Map from './map';
 import Layout from './components/layout';
 import firebase from './utils/firebase';
+import Resizer from 'react-image-file-resizer';
 
 class App extends React.Component {
   constructor(props) {
@@ -86,12 +87,26 @@ class App extends React.Component {
 
   handleSubmit(event) {
     event.preventDefault();
-    // console.log(this.fileInput.current.files[0]);
-    const chosenFile = this.fileInput.current.files[0];
-    const picRef = this.storage.ref().child(chosenFile.name);
-    picRef
-      .put(chosenFile)
-      .then(s => console.log('Uploaded'));
+    console.log(this.fileInput.current.files[0]);
+    if (!(/image\/*/g).test(this.fileInput.current.files[0].type)) {
+      alert("Please upload an image");
+    }
+
+    const picRef = this.storage.ref().child(this.state.name);
+
+    // Resize images to max width of 4096 to support mobile
+    Resizer.imageFileResizer(
+      this.fileInput.current.files[0],
+      4096,
+      4096,
+      'JPEG',
+      70,
+      0,
+      blob => {
+        picRef.put(blob).then(s => console.log('Uploaded'));
+      },
+      'blob',
+    );
   }
 
   render() {
