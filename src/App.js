@@ -14,7 +14,7 @@ class App extends React.Component {
       myLat: 0,
       myLon: 0,
       handicapped: false,
-      seperateHandicapped: false,
+      separateHandicapped: false,
       hose: false,
       showerHeads: false,
       male: false,
@@ -48,11 +48,11 @@ class App extends React.Component {
         [event.target.name]: value,
       });
     } else {
-      // For handicapped checkbox, have to make sure that seperateHandicapped
+      // For handicapped checkbox, have to make sure that separateHandicapped
       // checkbox is unticked when handicapped checkbox is unticked.
       this.setState({
         [event.target.name]: value,
-        seperateHandicapped: value && this.state.seperateHandicapped,
+        separateHandicapped: value && this.state.separateHandicapped,
       });
     }
   }
@@ -91,7 +91,10 @@ class App extends React.Component {
     // Ensures that file uploaded is an image. Does not work if file format
     // was changed manually but submit will still not work, just that this
     // warning will not show too.
-    if (!/image\/*/g.test(this.fileInput.current.files[0].type)) {
+    if (
+      this.fileInput.current.files[0] == null ||
+      !/image\/*/g.test(this.fileInput.current.files[0].type)
+    ) {
       alert('Please make sure file uploaded is an image');
     }
 
@@ -108,7 +111,9 @@ class App extends React.Component {
       70,
       0,
       blob => {
-        picRef.put(blob).then(s => console.log('Uploaded'));
+        picRef.put(blob).then(s => {
+          this.storage.ref().child(this.state.name);
+        });
       },
       'blob',
     );
@@ -196,8 +201,8 @@ class App extends React.Component {
             <label>
               <input
                 type="checkbox"
-                name="seperateHandicapped"
-                checked={this.state.seperateHandicapped}
+                name="separateHandicapped"
+                checked={this.state.separateHandicapped}
                 onChange={this.handleInputChange}
               />
               Seperate Handicapped{' '}
@@ -238,7 +243,8 @@ class App extends React.Component {
 
           <br />
           <label>
-            Select a paranoma image:<br />
+            Select a paranoma image:
+            <br />
             <input
               type="file"
               name="paranomaPath"
@@ -254,8 +260,7 @@ class App extends React.Component {
             disabled={
               this.state.name === '' ||
               this.state.lat === 0 ||
-              this.state.lon === 0 ||
-              this.fileInput.current.files[0] == null
+              this.state.lon === 0
             }
             value="Submit"
           />
