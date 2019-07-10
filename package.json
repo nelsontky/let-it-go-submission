@@ -12,7 +12,8 @@
     "react-scripts": "3.0.1",
     "typography": "^0.16.19",
     "typography-inject-fonts": "0.0.0",
-    "typography-theme-fairy-gates": "^0.16.19"
+    "typography-theme-fairy-gates": "^0.16.19",
+    "uniqid": "^5.0.3"
   },
   "scripts": {
     "start": "react-scripts start",
