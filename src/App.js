@@ -4,6 +4,8 @@ import Layout from './components/layout';
 import firebase from './utils/firebase';
 import Resizer from 'react-image-file-resizer';
 
+const uniqid = require('uniqid');
+
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -117,8 +119,8 @@ class App extends React.Component {
         // Uploads image to firebase storage
         let uploadTask = this.storage
           .ref()
-          // CHANGE FILENAME TO SOMETHING UNIQUE
-          .child(this.state.name)
+          // Names file appended with a unique id so as to prevent overwrites
+          .child(uniqid(this.state.name + "-"))
           .put(blob);
 
         uploadTask.on(
