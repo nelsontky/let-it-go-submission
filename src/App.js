@@ -1,5 +1,6 @@
 import React from 'react';
 import Map from './components/map';
+import Submitted from './components/submitted';
 import Layout from './components/layout';
 import firebase from './utils/firebase';
 import Resizer from 'react-image-file-resizer';
@@ -338,6 +339,8 @@ class App extends React.Component {
           handleMapClick={this.handleMapClick}
           updateMyLocation={this.updateMyLocation}
         />
+
+        <Submitted uid={this.props.uid} db={this.db} />
       </Layout>
     );
   }

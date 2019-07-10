@@ -20,7 +20,7 @@ class Map extends React.Component {
       );
     } else {
       // Browser doesn't support Geolocation
-      console.log('no permission');
+      console.log('No permission');
     }
   }
 
