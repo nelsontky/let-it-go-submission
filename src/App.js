@@ -4,6 +4,8 @@ import Layout from './components/layout';
 import firebase from './utils/firebase';
 import Resizer from 'react-image-file-resizer';
 
+const uniqid = require('uniqid');
+
 class App extends React.Component {
   constructor(props) {
     super(props);
@@ -20,6 +22,9 @@ class App extends React.Component {
       male: false,
       female: false,
       waterCooler: false,
+      progress: 0,
+      progressShown: false,
+      error: false,
     };
 
     this.fileInput = React.createRef();
@@ -98,11 +103,11 @@ class App extends React.Component {
       alert('Please make sure file uploaded is an image');
     }
 
-    // Paranomas are thrown onto the root of the firebase storage and files
-    // are named after the input name.
-    const picRef = this.storage.ref().child(this.state.name);
+    // Show submission progress
+    this.setState({progressShown: true});
 
-    // Resize images to max width of 4096 to support mobile
+    // Resize images to max width of 4096 to support mobile, after resizing,
+    // image will be uploaded and firestore entry would be created
     Resizer.imageFileResizer(
       this.fileInput.current.files[0],
       4096,
@@ -111,9 +116,58 @@ class App extends React.Component {
       70,
       0,
       blob => {
-        picRef.put(blob).then(s => {
-          this.storage.ref().child(this.state.name);
-        });
+        // Uploads image to firebase storage
+        let uploadTask = this.storage
+          .ref()
+          // Names file appended with a unique id so as to prevent overwrites
+          .child(uniqid(this.state.name + "-"))
+          .put(blob);
+
+        uploadTask.on(
+          firebase.storage.TaskEvent.STATE_CHANGED,
+          snapshot => {
+            let progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+
+            this.setState({progress});
+          },
+          err => {
+            this.setState({error: true});
+          },
+          () => {
+            // Upload completed successfully
+            uploadTask.snapshot.ref.getDownloadURL().then(paranomaUrl => {
+
+              const doc = this.db
+                .collection('users')
+                // Change doc name to user uid
+                .doc('placeholder');
+
+              // To get the document does not exist message away
+              doc.set({uid: 'placeholder'});
+
+              doc
+                .collection('submissions')
+                .doc(this.state.name)
+                .set({
+                  facilities: {
+                    female: this.state.female,
+                    handicapped: this.state.handicapped,
+                    hose: this.state.hose,
+                    male: this.state.male,
+                    separateHandicapped: this.state.separateHandicapped,
+                    showerHeads: this.state.showerHeads,
+                    waterCooler: this.state.waterCooler,
+                  },
+                  lat: this.state.lat,
+                  lon: this.state.lon,
+                  name: this.state.name,
+                  paranomaUrl,
+                }).then(() => window.location.reload());
+              // Should {merge: true}??? KIV
+            });
+          },
+        );
       },
       'blob',
     );
@@ -264,6 +318,18 @@ class App extends React.Component {
             }
             value="Submit"
           />
+
+          {/* Progress indicator */}
+          <span>
+            {this.state.progressShown &&
+              ' ' + Math.floor(this.state.progress) + '%'}
+          </span>
+
+          {/* Error indicator */}
+          <p>
+            {this.state.error &&
+              'An error occured, please refresh the page and try again'}
+          </p>
         </form>
 
         {/* Map component, takes in 2 functions that are needed to set local
