@@ -101,76 +101,76 @@ class App extends React.Component {
       !/image\/*/g.test(this.fileInput.current.files[0].type)
     ) {
       alert('Please make sure file uploaded is an image');
+    } else {
+      // Resize images to max width of 4096 to support mobile, after resizing,
+      // image will be uploaded and firestore entry would be created
+      Resizer.imageFileResizer(
+        this.fileInput.current.files[0],
+        4096,
+        4096,
+        'JPEG',
+        70,
+        0,
+        blob => {
+          // Show submission progress
+          this.setState({progressShown: true});
+
+          // Uploads image to firebase storage
+          let uploadTask = this.storage
+            .ref()
+            // Names file appended with a unique id so as to prevent overwrites
+            .child(uniqid(this.state.name + '-'))
+            .put(blob);
+
+          uploadTask.on(
+            firebase.storage.TaskEvent.STATE_CHANGED,
+            snapshot => {
+              let progress =
+                (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+
+              this.setState({progress});
+            },
+            err => {
+              this.setState({error: true});
+            },
+            () => {
+              // Upload completed successfully
+              uploadTask.snapshot.ref.getDownloadURL().then(paranomaUrl => {
+                const doc = this.db
+                  .collection('users')
+                  // Set doc name to user uid
+                  .doc(this.props.uid);
+
+                // To get the document does not exist message away
+                doc.set({uid: this.props.uid});
+
+                doc
+                  .collection('submissions')
+                  .doc(this.state.name)
+                  .set({
+                    facilities: {
+                      female: this.state.female,
+                      handicapped: this.state.handicapped,
+                      hose: this.state.hose,
+                      male: this.state.male,
+                      separateHandicapped: this.state.separateHandicapped,
+                      showerHeads: this.state.showerHeads,
+                      waterCooler: this.state.waterCooler,
+                    },
+                    lat: this.state.lat,
+                    lon: this.state.lon,
+                    name: this.state.name,
+                    paranomaUrl,
+                  })
+                  .then(() => window.location.reload());
+                // Should {merge: true}??? KIV
+              });
+            },
+          );
+        },
+        'blob',
+      );
     }
-
-    // Show submission progress
-    this.setState({progressShown: true});
-
-    // Resize images to max width of 4096 to support mobile, after resizing,
-    // image will be uploaded and firestore entry would be created
-    Resizer.imageFileResizer(
-      this.fileInput.current.files[0],
-      4096,
-      4096,
-      'JPEG',
-      70,
-      0,
-      blob => {
-        // Uploads image to firebase storage
-        let uploadTask = this.storage
-          .ref()
-          // Names file appended with a unique id so as to prevent overwrites
-          .child(uniqid(this.state.name + "-"))
-          .put(blob);
-
-        uploadTask.on(
-          firebase.storage.TaskEvent.STATE_CHANGED,
-          snapshot => {
-            let progress =
-              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-
-            this.setState({progress});
-          },
-          err => {
-            this.setState({error: true});
-          },
-          () => {
-            // Upload completed successfully
-            uploadTask.snapshot.ref.getDownloadURL().then(paranomaUrl => {
-
-              const doc = this.db
-                .collection('users')
-                // Change doc name to user uid
-                .doc('placeholder');
-
-              // To get the document does not exist message away
-              doc.set({uid: 'placeholder'});
-
-              doc
-                .collection('submissions')
-                .doc(this.state.name)
-                .set({
-                  facilities: {
-                    female: this.state.female,
-                    handicapped: this.state.handicapped,
-                    hose: this.state.hose,
-                    male: this.state.male,
-                    separateHandicapped: this.state.separateHandicapped,
-                    showerHeads: this.state.showerHeads,
-                    waterCooler: this.state.waterCooler,
-                  },
-                  lat: this.state.lat,
-                  lon: this.state.lon,
-                  name: this.state.name,
-                  paranomaUrl,
-                }).then(() => window.location.reload());
-              // Should {merge: true}??? KIV
-            });
-          },
-        );
-      },
-      'blob',
-    );
   }
 
   render() {
