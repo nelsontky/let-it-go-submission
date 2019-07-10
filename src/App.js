@@ -22,6 +22,7 @@ class App extends React.Component {
       waterCooler: false,
       progress: 0,
       progressShown: false,
+      error: false,
     };
 
     this.fileInput = React.createRef();
@@ -114,7 +115,6 @@ class App extends React.Component {
       0,
       blob => {
         // Uploads image to firebase storage
-
         let uploadTask = this.storage
           .ref()
           // CHANGE FILENAME TO SOMETHING UNIQUE
@@ -129,13 +129,40 @@ class App extends React.Component {
 
             this.setState({progress});
           },
-          error => {
-            console.log('An error occured, please retry');
+          err => {
+            this.setState({error: true});
           },
           () => {
             // Upload completed successfully
-            uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
-              console.log(downloadURL);
+            uploadTask.snapshot.ref.getDownloadURL().then(paranomaUrl => {
+
+              const doc = this.db
+                .collection('users')
+                // Change doc name to user uid
+                .doc('placeholder');
+
+              // To get the document does not exist message away
+              doc.set({uid: 'placeholder'});
+
+              doc
+                .collection('submissions')
+                .doc(this.state.name)
+                .set({
+                  facilities: {
+                    female: this.state.female,
+                    handicapped: this.state.handicapped,
+                    hose: this.state.hose,
+                    male: this.state.male,
+                    separateHandicapped: this.state.separateHandicapped,
+                    showerHeads: this.state.showerHeads,
+                    waterCooler: this.state.waterCooler,
+                  },
+                  lat: this.state.lat,
+                  lon: this.state.lon,
+                  name: this.state.name,
+                  paranomaUrl,
+                }).then(() => window.location.reload());
+              // Should {merge: true}??? KIV
             });
           },
         );
@@ -289,10 +316,18 @@ class App extends React.Component {
             }
             value="Submit"
           />
+
+          {/* Progress indicator */}
           <span>
             {this.state.progressShown &&
               ' ' + Math.floor(this.state.progress) + '%'}
           </span>
+
+          {/* Error indicator */}
+          <p>
+            {this.state.error &&
+              'An error occured, please refresh the page and try again'}
+          </p>
         </form>
 
         {/* Map component, takes in 2 functions that are needed to set local
