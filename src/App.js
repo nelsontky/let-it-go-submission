@@ -20,6 +20,8 @@ class App extends React.Component {
       male: false,
       female: false,
       waterCooler: false,
+      progress: 0,
+      progressShown: false,
     };
 
     this.fileInput = React.createRef();
@@ -98,11 +100,11 @@ class App extends React.Component {
       alert('Please make sure file uploaded is an image');
     }
 
-    // Paranomas are thrown onto the root of the firebase storage and files
-    // are named after the input name.
-    const picRef = this.storage.ref().child(this.state.name);
+    // Show submission progress
+    this.setState({progressShown: true});
 
-    // Resize images to max width of 4096 to support mobile
+    // Resize images to max width of 4096 to support mobile, after resizing,
+    // image will be uploaded and firestore entry would be created
     Resizer.imageFileResizer(
       this.fileInput.current.files[0],
       4096,
@@ -111,9 +113,32 @@ class App extends React.Component {
       70,
       0,
       blob => {
-        picRef.put(blob).then(s => {
-          this.storage.ref().child(this.state.name);
-        });
+        // Uploads image to firebase storage
+
+        let uploadTask = this.storage
+          .ref()
+          // CHANGE FILENAME TO SOMETHING UNIQUE
+          .child(this.state.name)
+          .put(blob);
+
+        uploadTask.on(
+          firebase.storage.TaskEvent.STATE_CHANGED,
+          snapshot => {
+            let progress =
+              (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+
+            this.setState({progress});
+          },
+          error => {
+            console.log('An error occured, please retry');
+          },
+          () => {
+            // Upload completed successfully
+            uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
+              console.log(downloadURL);
+            });
+          },
+        );
       },
       'blob',
     );
@@ -264,6 +289,10 @@ class App extends React.Component {
             }
             value="Submit"
           />
+          <span>
+            {this.state.progressShown &&
+              ' ' + Math.floor(this.state.progress) + '%'}
+          </span>
         </form>
 
         {/* Map component, takes in 2 functions that are needed to set local
