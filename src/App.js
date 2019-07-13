@@ -5,6 +5,14 @@ import Layout from './components/layout';
 import firebase from './utils/firebase';
 import Resizer from 'react-image-file-resizer';
 
+// Material UI imports
+import TextField from '@material-ui/core/TextField';
+import Button from '@material-ui/core/Button';
+import Checkbox from '@material-ui/core/Checkbox';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import FormLabel from '@material-ui/core/FormLabel';
+import FormGroup from '@material-ui/core/FormGroup';
+
 const uniqid = require('uniqid');
 
 class App extends React.Component {
@@ -175,150 +183,171 @@ class App extends React.Component {
   }
 
   render() {
+    console.log(this.state);
     return (
       <Layout>
         {/* Main form */}
         <form onSubmit={this.handleSubmit}>
-          <label>
-            Name
-            <input
-              type="text"
-              name="name"
-              value={this.state.name}
-              onChange={this.handleInputChange}
-            />
-          </label>
-          <br />
+          {/* Toilet name input*/}
+          <TextField
+            label="Name"
+            placeholder="Enter toilet name"
+            fullWidth
+            margin="normal"
+            variant="outlined"
+            InputLabelProps={{
+              shrink: true,
+            }}
+            name="name"
+            onChange={this.handleInputChange}
+          />
 
-          <button onClick={this.setToCurrentLocation}>
+          {/* Set Lat Lon to current location button */}
+          <Button onClick={this.setToCurrentLocation} variant="contained">
             Set Lat Lon to current location
-          </button>
+          </Button>
           <br />
 
-          <label>
-            Lat
-            <br />
-            <input
-              type="text"
-              name="lat"
-              value={this.state.lat}
-              onChange={this.handleInputChange}
-              style={{width: '50%'}}
-            />
-          </label>
+          {/* Lat input */}
+          <TextField
+            style={{marginRight: '1em'}}
+            label="Latitude"
+            margin="normal"
+            variant="outlined"
+            name="lat"
+            onChange={this.handleInputChange}
+            value={this.state.lat}
+          />
+
+          {/* Lon input */}
+          <TextField
+            label="Longitude"
+            margin="normal"
+            variant="outlined"
+            name="lon"
+            onChange={this.handleInputChange}
+            value={this.state.lon}
+          />
+
+          {/* Map component, takes in 2 functions that are needed to set local
+        state from child component */}
+          <Map
+            handleMapClick={this.handleMapClick}
+            updateMyLocation={this.updateMyLocation}
+          />
           <br />
 
-          <label>
-            Lon
-            <br />
-            <input
-              type="text"
-              name="lon"
-              value={this.state.lon}
-              onChange={this.handleInputChange}
-              style={{width: '50%'}}
+          {/* Checkboxes */}
+          <FormLabel component="legend">Facilities</FormLabel>
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={this.state.male}
+                  onChange={this.handleInputChange}
+                  name="male"
+                />
+              }
+              label="Male"
             />
-          </label>
-          <br />
-
-          <label>
-            <input
-              type="checkbox"
-              name="male"
-              checked={this.state.male}
-              onChange={this.handleInputChange}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={this.state.female}
+                  onChange={this.handleInputChange}
+                  name="female"
+                />
+              }
+              label="Female"
             />
-            Male{' '}
-          </label>
 
-          <label>
-            <input
-              type="checkbox"
-              name="female"
-              checked={this.state.female}
-              onChange={this.handleInputChange}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={this.state.handicapped}
+                  onChange={this.handleInputChange}
+                  name="handicapped"
+                />
+              }
+              label="Handicapped"
             />
-            Female{' '}
-          </label>
 
-          <label>
-            <input
-              type="checkbox"
-              name="handicapped"
-              checked={this.state.handicapped}
-              onChange={this.handleInputChange}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={this.state.separateHandicapped}
+                  onChange={this.handleInputChange}
+                  name="separateHandicapped"
+                  disabled={!this.state.handicapped}
+                />
+              }
+              label="Separate Handicapped"
             />
-            Handicapped{' '}
-          </label>
 
-          {/* Show only if handicapped is selected */}
-          {this.state.handicapped && (
-            <label>
-              <input
-                type="checkbox"
-                name="separateHandicapped"
-                checked={this.state.separateHandicapped}
-                onChange={this.handleInputChange}
-              />
-              Seperate Handicapped{' '}
-            </label>
-          )}
-          <br />
-
-          <label>
-            <input
-              type="checkbox"
-              name="hose"
-              checked={this.state.hose}
-              onChange={this.handleInputChange}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={this.state.hose}
+                  onChange={this.handleInputChange}
+                  name="hose"
+                />
+              }
+              label="Hose"
             />
-            Hose{' '}
-          </label>
 
-          <label>
-            <input
-              type="checkbox"
-              name="showerHeads"
-              checked={this.state.showerHeads}
-              onChange={this.handleInputChange}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={this.state.showerHeads}
+                  onChange={this.handleInputChange}
+                  name="showerHeads"
+                />
+              }
+              label="Shower Heads"
             />
-            Shower Heads{' '}
-          </label>
 
-          <label>
-            <input
-              type="checkbox"
-              name="waterCooler"
-              checked={this.state.waterCooler}
-              onChange={this.handleInputChange}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={this.state.waterCooler}
+                  onChange={this.handleInputChange}
+                  name="waterCooler"
+                />
+              }
+              label="Water Cooler"
             />
-            Water Cooler{' '}
-          </label>
-          <br />
-
-          <br />
-          <label>
-            Select a paranoma image:
-            <br />
-            <input
-              type="file"
-              name="paranomaPath"
-              accept="image/*"
-              ref={this.fileInput}
-            />
-          </label>
-          <br />
+          </FormGroup>
 
           <br />
           <input
+            type="file"
+            name="paranomaPath"
+            accept="image/*"
+            ref={this.fileInput}
+            id="contained-button-file"
+            style={{display: 'none'}}
+          />
+          <label htmlFor="contained-button-file">
+            <Button variant="contained" component="span">
+              Select panorama image
+            </Button>
+            {this.fileInput.current != null &&
+              this.fileInput.current.files[0] != null &&
+              ` ${this.fileInput.current.files[0].name}`}
+          </label>
+          <br />
+
+          <br />
+          <Button variant="contained" color="primary"
             type="submit"
             disabled={
               this.state.name === '' ||
               this.state.lat === 0 ||
               this.state.lon === 0
             }
-            value="Submit"
-          />
+          >
+            Submit
+          </Button>
 
           {/* Progress indicator */}
           <span>
@@ -332,13 +361,6 @@ class App extends React.Component {
               'An error occured, please refresh the page and try again'}
           </p>
         </form>
-
-        {/* Map component, takes in 2 functions that are needed to set local
-        state from child component */}
-        <Map
-          handleMapClick={this.handleMapClick}
-          updateMyLocation={this.updateMyLocation}
-        />
 
         <Submitted uid={this.props.uid} db={this.db} />
       </Layout>
