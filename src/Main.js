@@ -2,6 +2,8 @@ import React from 'react';
 import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
 import firebase from './utils/firebase';
 import App from './App';
+import Admin from './Admin';
+
 
 // Implement Google and Firebase signin
 
@@ -21,7 +23,7 @@ export default class Main extends React.Component {
   componentDidMount() {
     this.unregisterAuthObserver = firebase
       .auth()
-      .onAuthStateChanged(user => this.setState({isSignedIn: !!user}));
+      .onAuthStateChanged(user => this.setState({ isSignedIn: !!user }));
   }
 
   render() {
@@ -37,13 +39,30 @@ export default class Main extends React.Component {
         </div>
       );
     }
-    return (
-      <div>
-        <App uid={firebase.auth().currentUser.uid} />
-        <div style={{textAlign: 'center'}}>
-          <button onClick={() => firebase.auth().signOut()}>Sign Out</button>
+
+
+
+    if (firebase.auth().currentUser.email == "lowzxx@gmail.com" || firebase.auth().currentUser.email == "nelsontkyi@gmail.com") {      
+      return (
+        <div>
+          <Admin />
+          <div style={{ textAlign: 'center' }}>
+            <button onClick={() => firebase.auth().signOut()}>Sign Out</button>
+          </div>
         </div>
-      </div>
-    );
+
+      )
+    } else {
+      return (
+        <div>
+          <App uid={firebase.auth().currentUser.uid} />
+          <div style={{ textAlign: 'center' }}>
+            <button onClick={() => firebase.auth().signOut()}>Sign Out</button>
+          </div>
+        </div>
+      );
+
+    }
+
   }
 }
