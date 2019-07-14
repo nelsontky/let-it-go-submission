@@ -146,7 +146,8 @@ export default class Admin extends React.Component {
                                 submissions[index] = submission;
                                 this.setState({
                                     submissions: submissions,
-                                    submissionIndex: index
+                                    submissionIndex: index,
+                                    submissionToEdit : submission
                                 })
                                 break;
                             case "Rejected":
@@ -270,7 +271,6 @@ export default class Admin extends React.Component {
                             () => {
                                 this.setState({
                                     submissions,
-                                    refresh: true
                                 })
                                 alert('Successfully edited!')
                                 window.location.reload()
@@ -314,10 +314,15 @@ export default class Admin extends React.Component {
                                 this.handleConfirmEdit(index)
                             }}> Confirm Changes </Button>
                             <Button size = 'small' onClick={() => {
+                                let submissions = [...this.state.submissions];
+                                let submission = this.state.submissionToEdit;
+                                submission.isEditing = false;
+                                submissions[index] = submission;
+                                
                                 this.setState({
-                                    isEditing: false,
-                                    refresh : true,
+                                    submissions : submissions
                                 })
+                                
                             }}> Cancel </Button>
                         </TableCell>
                     </TableRow>
