@@ -34,6 +34,12 @@ class App extends React.Component {
       progress: 0,
       progressShown: false,
       error: false,
+
+      // Fields in charge of editing.
+      editing: false,
+      panorama: {},
+      editPanorama: false,
+      editDocId: '',
     };
 
     this.fileInput = React.createRef();
@@ -46,6 +52,7 @@ class App extends React.Component {
     this.updateMyLocation = this.updateMyLocation.bind(this);
     this.setToCurrentLocation = this.setToCurrentLocation.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
+    this.handleEdit = this.handleEdit.bind(this);
   }
 
   // Handles state of input forms
@@ -102,90 +109,185 @@ class App extends React.Component {
   handleSubmit(event) {
     event.preventDefault();
 
-    // Ensures that file uploaded is an image. Does not work if file format
-    // was changed manually but submit will still not work, just that this
-    // warning will not show too.
-    if (
-      this.fileInput.current.files[0] == null ||
-      !/image\/*/g.test(this.fileInput.current.files[0].type)
-    ) {
-      alert('Please make sure file uploaded is an image');
+    // If user is editing submission and does not choose to reupload panorama
+    if (this.state.edit && !this.state.editPanorama) {
+      const doc = this.db
+        .collection('userSubmissions')
+        // Set doc name to user uid
+        .doc(this.props.currentUser.uid);
+
+      doc
+        .collection('submissions')
+        .doc()
+        .set({
+          facilities: {
+            female: this.state.female,
+            handicapped: this.state.handicapped,
+            hose: this.state.hose,
+            male: this.state.male,
+            separateHandicapped: this.state.separateHandicapped,
+            showerHeads: this.state.showerHeads,
+            waterCooler: this.state.waterCooler,
+          },
+          lat: this.state.lat,
+          lon: this.state.lon,
+          name: this.state.name.trim(),
+
+          // Use old panorama.
+          panorama: this.state.panorama,
+          date: new Date(Date.now()),
+          status: 'pending',
+        })
+        .then(() => {
+          // Delete old version.
+          this.db
+            .collection('userSubmissions')
+            // Set doc name to user uid
+            .doc(this.props.currentUser.uid)
+            .collection('submissions')
+            .doc(this.state.editDocId)
+            .delete();
+        })
+        .then(() => window.location.reload());
     } else {
-      // Resize images to max width of 4096 to support mobile, after resizing,
-      // image will be uploaded and firestore entry would be created
-      Resizer.imageFileResizer(
-        this.fileInput.current.files[0],
-        4096,
-        4096,
-        'JPEG',
-        70,
-        0,
-        blob => {
-          // Show submission progress
-          this.setState({progressShown: true});
+      // Ensures that file uploaded is an image. Does not work if file format
+      // was changed manually but submit will still not work, just that this
+      // warning will not show too.
+      if (
+        this.fileInput.current.files[0] == null ||
+        !/image\/*/g.test(this.fileInput.current.files[0].type)
+      ) {
+        alert('Please make sure file uploaded is an image');
+      } else {
+        // Resize images to max width of 4096 to support mobile, after resizing,
+        // image will be uploaded and firestore storage entry would be created.
+        Resizer.imageFileResizer(
+          this.fileInput.current.files[0],
+          4096,
+          4096,
+          'JPEG',
+          70,
+          0,
+          blob => {
+            // Show submission progress.
+            this.setState({progressShown: true});
 
-          // Uploads image to firebase storage
-          let uploadTask = this.storage
-            .ref()
-            // Names file appended with a unique id so as to prevent overwrites
-            .child(uniqid(this.state.name + '-'))
-            .put(blob);
+            // Sets file name, file name appended with a unique id to prevent
+            // overwrites.
+            const fileName = `${this.state.name} - ${uniqid()}.jpeg`;
 
-          uploadTask.on(
-            firebase.storage.TaskEvent.STATE_CHANGED,
-            snapshot => {
-              let progress =
-                (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            // Uploads image to firebase storage
+            let uploadTask = this.storage
+              .ref()
+              .child(fileName)
+              .put(blob);
 
-              this.setState({progress});
-            },
-            err => {
-              this.setState({error: true});
-            },
-            () => {
-              // Upload completed successfully
-              uploadTask.snapshot.ref.getDownloadURL().then(paranomaUrl => {
-                const doc = this.db
-                  .collection('users')
-                  // Set doc name to user uid
-                  .doc(this.props.uid);
+            uploadTask.on(
+              firebase.storage.TaskEvent.STATE_CHANGED,
+              snapshot => {
+                let progress =
+                  (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
 
-                // To get the document does not exist message away
-                doc.set({uid: this.props.uid});
+                this.setState({progress});
+              },
+              err => {
+                this.setState({error: true});
+              },
+              () => {
+                // Upload completed successfully
+                uploadTask.snapshot.ref.getDownloadURL().then(url => {
+                  const doc = this.db
+                    .collection('userSubmissions')
+                    // Set doc name to user uid
+                    .doc(this.props.currentUser.uid);
 
-                doc
-                  .collection('submissions')
-                  .doc(this.state.name)
-                  .set({
-                    facilities: {
-                      female: this.state.female,
-                      handicapped: this.state.handicapped,
-                      hose: this.state.hose,
-                      male: this.state.male,
-                      separateHandicapped: this.state.separateHandicapped,
-                      showerHeads: this.state.showerHeads,
-                      waterCooler: this.state.waterCooler,
+                  // To get the document does not exist message away
+                  doc.set({
+                    currentUser: {
+                      name: this.props.currentUser.displayName,
+                      email: this.props.currentUser.email,
+                      photoURL: this.props.currentUser.photoURL,
+                      uid: this.props.currentUser.uid,
                     },
-                    lat: this.state.lat,
-                    lon: this.state.lon,
-                    name: this.state.name,
-                    paranomaUrl,
-                  })
-                  .then(() => window.location.reload());
-                // Should {merge: true}??? KIV
-              });
-            },
-          );
-        },
-        'blob',
-      );
+                  });
+
+                  doc
+                    .collection('submissions')
+                    .doc()
+                    .set({
+                      facilities: {
+                        female: this.state.female,
+                        handicapped: this.state.handicapped,
+                        hose: this.state.hose,
+                        male: this.state.male,
+                        separateHandicapped: this.state.separateHandicapped,
+                        showerHeads: this.state.showerHeads,
+                        waterCooler: this.state.waterCooler,
+                      },
+                      lat: this.state.lat,
+                      lon: this.state.lon,
+                      name: this.state.name.trim(),
+                      panorama: {url, fileName},
+                      date: new Date(Date.now()),
+                      status: 'pending',
+                    })
+                    .then(() => {
+                      // If is editing submission, delete old version and old
+                      // panorama
+                      if (this.state.edit) {
+                        this.db
+                          .collection('userSubmissions')
+                          // Set doc name to user uid
+                          .doc(this.props.currentUser.uid)
+                          .collection('submissions')
+                          .doc(this.state.editDocId)
+                          .delete();
+
+                        // Delete old panorama
+                        this.storage
+                          .ref()
+                          .child(this.state.panorama.fileName)
+                          .delete();
+                      }
+                    })
+                    .then(() => window.location.reload());
+                  // Should {merge: true}??? KIV
+                });
+              },
+            );
+          },
+          'blob',
+        );
+      }
     }
   }
 
+  // Handle the editing of user submitted toilets. Meant to be passed as a prop
+  // into <Submitted /> component.
+  handleEdit(submission, submissionId) {
+    window.scrollTo(0, 0);
+    this.setState({
+      edit: true,
+      female: submission.facilities.female,
+      male: submission.facilities.male,
+      handicapped: submission.facilities.handicapped,
+      separateHandicapped: submission.facilities.separateHandicapped,
+      showerHeads: submission.facilities.showerHeads,
+      waterCooler: submission.facilities.waterCooler,
+      hose: submission.facilities.hose,
+      lat: submission.lat,
+      lon: submission.lon,
+      name: submission.name,
+      panorama: submission.panorama,
+      editDocId: submissionId,
+    });
+  }
+
   render() {
-    console.log(this.state);
+    // console.log(this.state);
     return (
       <Layout>
+        {this.state.edit && <h6>Editing submission</h6>}
         {/* Main form */}
         <form onSubmit={this.handleSubmit}>
           {/* Toilet name input*/}
@@ -200,14 +302,13 @@ class App extends React.Component {
             }}
             name="name"
             onChange={this.handleInputChange}
+            value={this.state.name}
           />
-
           {/* Set Lat Lon to current location button */}
           <Button onClick={this.setToCurrentLocation} variant="contained">
             Set Lat Lon to current location
           </Button>
           <br />
-
           {/* Lat input */}
           <TextField
             style={{marginRight: '1em'}}
@@ -218,7 +319,6 @@ class App extends React.Component {
             onChange={this.handleInputChange}
             value={this.state.lat}
           />
-
           {/* Lon input */}
           <TextField
             label="Longitude"
@@ -228,7 +328,6 @@ class App extends React.Component {
             onChange={this.handleInputChange}
             value={this.state.lon}
           />
-
           {/* Map component, takes in 2 functions that are needed to set local
         state from child component */}
           <Map
@@ -236,7 +335,6 @@ class App extends React.Component {
             updateMyLocation={this.updateMyLocation}
           />
           <br />
-
           {/* Checkboxes */}
           <FormLabel component="legend">Facilities</FormLabel>
           <FormGroup>
@@ -317,8 +415,26 @@ class App extends React.Component {
               label="Water Cooler"
             />
           </FormGroup>
-
           <br />
+
+          {/* Present user with choice to edit Panorama image if edit 
+          mode is on */}
+          {this.state.edit && (
+            <div>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={this.state.editPanorama}
+                    onChange={this.handleInputChange}
+                    name="editPanorama"
+                  />
+                }
+                label="Edit Panorama image"
+              />
+              <br />
+            </div>
+          )}
+
           <input
             type="file"
             name="paranomaPath"
@@ -327,34 +443,37 @@ class App extends React.Component {
             id="contained-button-file"
             style={{display: 'none'}}
           />
-          <label htmlFor="contained-button-file">
-            <Button variant="contained" component="span">
-              Select panorama image
-            </Button>
-            {this.fileInput.current != null &&
-              this.fileInput.current.files[0] != null &&
-              ` ${this.fileInput.current.files[0].name}`}
-          </label>
-          <br />
 
+          {/* Do not show upload Panorama button if in edit mode and 
+          edit panorama is not chosen */}
+          {(!this.state.edit || this.state.editPanorama) && (
+            <label htmlFor="contained-button-file">
+              <Button variant="contained" component="span">
+                Select panorama image
+              </Button>
+              {this.fileInput.current != null &&
+                this.fileInput.current.files[0] != null &&
+                ` ${this.fileInput.current.files[0].name}`}
+            </label>
+          )}
           <br />
-          <Button variant="contained" color="primary"
+          <br />
+          <Button
+            variant="contained"
+            color="primary"
             type="submit"
             disabled={
               this.state.name === '' ||
               this.state.lat === 0 ||
               this.state.lon === 0
-            }
-          >
+            }>
             Submit
           </Button>
-
           {/* Progress indicator */}
           <span>
             {this.state.progressShown &&
               ' ' + Math.floor(this.state.progress) + '%'}
           </span>
-
           {/* Error indicator */}
           <p>
             {this.state.error &&
@@ -362,7 +481,11 @@ class App extends React.Component {
           </p>
         </form>
 
-        <Submitted uid={this.props.uid} db={this.db} />
+        <Submitted
+          uid={this.props.currentUser.uid}
+          db={this.db}
+          handleEdit={this.handleEdit}
+        />
       </Layout>
     );
   }

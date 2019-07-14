@@ -55,7 +55,7 @@ export default class Main extends React.Component {
     } else {
       return (
         <div>
-          <App uid={firebase.auth().currentUser.uid} />
+          <App currentUser={firebase.auth().currentUser} />
           <div style={{ textAlign: 'center' }}>
             <button onClick={() => firebase.auth().signOut()}>Sign Out</button>
           </div>
