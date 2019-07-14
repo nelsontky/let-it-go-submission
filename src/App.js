@@ -113,7 +113,6 @@ class App extends React.Component {
     if (this.state.edit && !this.state.editPanorama) {
       const doc = this.db
         .collection('userSubmissions')
-        // Set doc name to user uid
         .doc(this.props.currentUser.uid);
 
       doc
@@ -135,8 +134,9 @@ class App extends React.Component {
 
           // Use old panorama.
           panorama: this.state.panorama,
+
           date: new Date(Date.now()),
-          status: 'pending',
+          status: {approval: 'pending', remarks: ''},
         })
         .then(() => {
           // Delete old version.
@@ -229,7 +229,7 @@ class App extends React.Component {
                       name: this.state.name.trim(),
                       panorama: {url, fileName},
                       date: new Date(Date.now()),
-                      status: 'pending',
+                      status: {approval: 'pending', remarks: ''},
                     })
                     .then(() => {
                       // If is editing submission, delete old version and old
@@ -251,7 +251,6 @@ class App extends React.Component {
                       }
                     })
                     .then(() => window.location.reload());
-                  // Should {merge: true}??? KIV
                 });
               },
             );
