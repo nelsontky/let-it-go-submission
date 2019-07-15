@@ -36,7 +36,7 @@ class App extends React.Component {
       error: false,
 
       // Fields in charge of editing.
-      editing: false,
+      edit: false,
       panorama: {},
       editPanorama: false,
       editDocId: '',
@@ -478,6 +478,14 @@ class App extends React.Component {
             {this.state.error &&
               'An error occured, please refresh the page and try again'}
           </p>
+          {this.state.edit && (
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={() => window.location.reload()}>
+              Cancel
+            </Button>
+          )}
         </form>
 
         <Submitted

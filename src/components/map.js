@@ -126,7 +126,7 @@ class Map extends React.Component {
   }
 
   render() {
-    return <div id="map" style={{width: '100%', height: '400px'}}></div>;
+    return <div id="map" style={{width: '100%', height: '300px'}}></div>;
   }
 }
 
