@@ -1,7 +1,11 @@
 import React from 'react';
-import EditIcon from '@material-ui/icons/Edit';
-import IconButton from '@material-ui/core/IconButton';
-// import Preview from './preview';
+import Preview from './preview';
+
+import Button from '@material-ui/core/Button';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableRow from '@material-ui/core/TableRow';
 
 class Submission extends React.Component {
   constructor(props) {
@@ -12,16 +16,36 @@ class Submission extends React.Component {
   render() {
     return (
       <div>
-        <h4>
-          {this.submission.name}
-          <IconButton
-            aria-label="Edit"
+        <h4>{this.submission.name}</h4>
+        <div>
+          {/* Edit button */}
+          <Button
+            variant="contained"
+            color="primary"
             onClick={() =>
               this.props.handleEdit(this.submission, this.props.children.id)
             }>
-            <EditIcon>edit</EditIcon>
-          </IconButton>
-        </h4>
+            Edit
+          </Button>
+          {/* Preview button */}
+          <Button
+            variant="contained"
+            color={
+              this.props.children.id === this.props.previewId
+                ? 'default'
+                : 'secondary'
+            }
+            onClick={
+              this.props.children.id === this.props.previewId
+                ? this.props.handleHide
+                : () => this.props.handlePreview(this.props.children.id)
+            }>
+            {this.props.children.id === this.props.previewId
+              ? 'Hide'
+              : 'Preview'}
+          </Button>
+        </div>
+        <br />
         {this.submission.facilities.male && (
           <i className="em-svg em-man-raising-hand" />
         )}
@@ -40,6 +64,10 @@ class Submission extends React.Component {
         {this.submission.facilities.hose && (
           <i className="em-svg em-sweat_drops" />
         )}
+        <br />
+        {this.props.children.id === this.props.previewId && (
+          <Preview submission={this.submission} />
+        )}
       </div>
     );
   }
@@ -49,7 +77,7 @@ class Submitted extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = {submissions: []};
+    this.state = {submissions: [], previewId: ''};
 
     // Read all of current user's submissions from firestore, then adds all
     // submissions into state.
@@ -65,15 +93,42 @@ class Submitted extends React.Component {
         }),
       )
       .then(() => this.setState({submissions}));
+
+    this.handlePreview = this.handlePreview.bind(this);
+    this.handleHide = this.handleHide.bind(this);
   }
+
+  handlePreview(docId) {
+    this.setState({
+      previewId: docId,
+    });
+  }
+
+  handleHide() {
+    this.setState({previewId: ''});
+  }
+
   render() {
     return (
       <div>
-        {this.state.submissions.map((x, i) => (
-          <Submission key={i} handleEdit={this.props.handleEdit}>
-            {x}
-          </Submission>
-        ))}
+        <Table>
+          <TableBody>
+            {this.state.submissions.map((x, i) => (
+              <TableRow key={i}>
+                <TableCell>
+                  <Submission
+                    key={i}
+                    handleEdit={this.props.handleEdit}
+                    handlePreview={this.handlePreview}
+                    handleHide={this.handleHide}
+                    previewId={this.state.previewId}>
+                    {x}
+                  </Submission>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     );
   }
