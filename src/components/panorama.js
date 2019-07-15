@@ -1,6 +1,6 @@
 import React from 'react';
 
-class Panorama extends React.PureComponent {
+class Panorama extends React.Component {
   componentDidMount() {
     window.pannellum.viewer('panorama', {
       type: 'equirectangular',
@@ -12,9 +12,9 @@ class Panorama extends React.PureComponent {
     });
   }
 
-  // shouldComponentUpdate(nextProps, nextState) {
-  //   return false;
-  // }
+  shouldComponentUpdate(nextProps, nextState) {
+    return false;
+  }
 
   render() {
     return (
