@@ -19,7 +19,13 @@
       work correctly both with client-side routing and a non-root public URL.
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
-    <title>React App</title>
+    <title>Submit to Let It Go</title>
+    <link href="https://afeld.github.io/emoji-css/emoji.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.pannellum.org/2.4/pannellum.css" />
+    <meta
+      name="viewport"
+      content="minimum-scale=1, initial-scale=1, width=device-width, shrink-to-fit=no"
+    />
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
@@ -34,8 +40,7 @@
       To begin the development, run `npm start` or `yarn start`.
       To create a production bundle, use `npm run build` or `yarn build`.
     -->
-    <script
-      src="https://maps.googleapis.com/maps/api/js?key=%REACT_APP_GOOGLE_API_KEY%&callback=initMap"
-    ></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=%REACT_APP_GOOGLE_API_KEY%&callback=initMap"></script>
+    <script src="./pannellum.js"></script>
   </body>
 </html>
