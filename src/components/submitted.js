@@ -61,6 +61,7 @@ class Submission extends React.Component {
       <div>
         <h4>{this.submission.name}</h4>
 
+        {/* Status text */}
         <Status status={this.submission.status} />
         <div>
           {/* Preview button */}
