@@ -42,7 +42,7 @@ export default class Main extends React.Component {
 
 
 
-    if (firebase.auth().currentUser.email == "lowzxx@gmail.com" || firebase.auth().currentUser.email == "nelsontkyi@gmail.comz") {      
+    if (firebase.auth().currentUser.email == "lowzxx@gmail.com" || firebase.auth().currentUser.email == "nelsontkyi@gmail.comz") { 
       return (
         <div>
           <Admin />

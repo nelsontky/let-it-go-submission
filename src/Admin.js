@@ -22,14 +22,13 @@ import {
 export default class Admin extends React.Component {
     constructor(props) {
         super(props);
-        this.submissionsDb = firebase.firestore().collection('users');
+        this.submissionsDb = firebase.firestore().collection('userSubmissions');
         this.toiletDb = firebase.firestore().collection('toilets');
         this.state = {
             submissions: [],
-            dialogOpened: false,
-            submissionToDelete: {},
+            submissionToReject: {},
             submissionToApprove: {},
-
+            
         };
         this.getAllSubmissions();
 
@@ -45,27 +44,32 @@ export default class Admin extends React.Component {
             .get()
             .then(querySnapshot => {
                 querySnapshot.forEach(user => {
-                    users.push(user.data().uid);
+                    users.push(user.data().currentUser.uid);
                 });
-            })
+            })           
             .then(() => {
                 users.forEach(user => this.getSubmissionsForUser(user));
             })
             .catch(error => {
-                alert(error);
+                alert('Error in getting submissions: ' + error);
             });
     }
 
     getSubmissionsForUser(user) {
-        let newSubmissions = [];
         this.submissionsDb
             .doc(user)
             .collection('submissions')
-            .get()
-            .then(querySnapshot => {
-                querySnapshot.forEach(submission => {
+            .onSnapshot(querySnapshot => {
+                let newSubmissions = [];
+                // resets the submissions in state back to empty so it doesnt accumulate each time it rerenders from a change
+                this.setState({
+                    submissions : []
+                })
+                querySnapshot.forEach(submission => {                    
                     newSubmissions.push({
                         userUid: user,
+                        docId: submission.id,
+                        date: submission.data().date,
                         isFemale: submission.data().facilities.female,
                         isMale: submission.data().facilities.male,
                         isHandicapped: submission.data().facilities.handicapped,
@@ -77,23 +81,30 @@ export default class Admin extends React.Component {
                         lat: submission.data().lat,
                         lon: submission.data().lon,
                         name: submission.data().name,
-                        paranomaUrl: submission.data().paranomaUrl,
-                        status: submission.data().status,
+                        paranomaUrl: submission.data().panorama.paranomaUrl,
+
+                        // editing
+                        status: submission.data().status.approval,
+                        remarks: submission.data().status.remarks,
                         isEditing: false
                     });
                 });
-            })
-            .then(() => {
                 this.setState(prevState => ({
-                    submissions: [...prevState.submissions, newSubmissions],
+                    submissions: [...prevState.submissions, newSubmissions].flatMap(x => x),
+                    refresh : !this.state.refresh
                 }));
             })
-            .then(() => {
-                this.setState(prevState => ({
-                    submissions: prevState.submissions.flatMap(x => x),
-                }));
-                console.log(this.state.submissions);
-            });
+            // .then(() => {
+            //     // this.setState(prevState => ({
+            //     //     submissions: [...prevState.submissions, newSubmissions].flatMap(x => x),
+            //     // }));
+            // })
+            // .then(() => {
+            //     // this.setState(prevState => ({
+            //     //     submissions: prevState.submissions.flatMap(x => x),
+            //     // }));
+            //     console.log(this.state.submissions);
+            // }).catch(error => alert("Error in getting submissions second function: " + error));
     }
 
     generateFacilities(submission) {
@@ -147,17 +158,18 @@ export default class Admin extends React.Component {
                                 this.setState({
                                     submissions: submissions,
                                     submissionIndex: index,
-                                    submissionToEdit : submission
+                                    submissionToEdit: submission
                                 })
                                 break;
-                            case "Rejected":
-                                this.triggerDialogToConfirmDelete(submission, index)
+                            case "Reject":
+                                this.handleRejectSubmissionClicked(submission, index);
                                 break;
                         }
+
                     }}>
                     <MenuItem value={'Edit'}>Edit</MenuItem>
-                    <MenuItem value={'Approved'}>Approved</MenuItem>
-                    <MenuItem value={'Rejected'}>Rejected</MenuItem>
+                    <MenuItem value={'Approve'}>Approve</MenuItem>
+                    <MenuItem value={'Reject'}>Reject</MenuItem>
                 </Select>
             </FormControl>
         );
@@ -170,18 +182,17 @@ export default class Admin extends React.Component {
         });
     }
     approveSubmission() {
-        // This chunk is just to update an object in the array of the state
-        let submissions = [...this.state.submissions];
+
         let submission = this.state.submissionToApprove;
-        submission.status = 'Approved';
-        submissions[this.state.submissionIndex] = submission;
-        // update submissions to show approved 
         this.submissionsDb
             .doc(this.state.submissionToApprove.userUid)
             .collection('submissions')
             .doc(this.state.submissionToApprove.name)
             .update({
-                status: "Approved"
+                status: {
+                    approval: "approved",
+                    remarks : ""
+                }
             })
 
 
@@ -206,82 +217,51 @@ export default class Admin extends React.Component {
             })
             .then(() => {
                 this.setState({
-                    submissions: submissions,
+                    // submissions: submissions,
                     approveDialogOpened: false,
                 });
                 alert(submission.name + ' has been approved!');
             });
     }
-    triggerDialogToConfirmDelete(submission, index) {
+
+
+    handleRejectSubmissionClicked(submission, index) {
+        alert(submission.name)
         this.setState({
-            submissionToDelete: submission,
-            submissionIndex: index,
-            deleteDialogOpened: true,
-        });
-    }
-    deleteSubmission() {
-        this.submissionsDb
-            .doc(this.state.submissionToDelete.userUid)
-            .collection('submissions')
-            .doc(this.state.submissionToDelete.name)
-            .delete()
-            .then(() => {
-                this.setState({
-                    deleteDialogOpened: false,
-                });
-                this.getAllSubmissions();
-                alert(this.state.submissionToDelete.name + ' has been deleted forever');
-                window.location.reload();
-            });
+            rejectDialogOpened: true,
+            submissionToReject: submission,
+            submissionIndex: index
+        })
+
     }
 
-
-    handleConfirmEdit(index) {
-        let submission = this.state.submissionToEdit
-        // create a new doc 
+    rejectSubmission() {
+        // update the rejection reason in the docs 
         this.submissionsDb
-            .doc(this.state.submissionToEdit.userUid)
+            .doc(this.state.submissionToReject.userUid)
             .collection('submissions')
-            .doc(this.state.tempName)
-            .set({
-                facilities: {
-                    female: submission.isFemale,
-                    handicapped: submission.isHandicapped,
-                    hose: submission.hasHose,
-                    male: submission.isMale,
-                    separateHandicapped: submission.isSeparateHandicapped,
-                    showerHeads: submission.hasShowerHeads,
-                    waterCooler: submission.hasWaterCooler,
-                },
-                lat: submission.lat,
-                lon: submission.lon,
-                name: this.state.tempName,
-                paranomaUrl: submission.paranomaUrl,
+            .doc(this.state.submissionToReject.docId)
+            .update({
+                status: {
+                    approval : 'rejected',
+                    remarks : ''
+                }
             }).then(
                 () => {
-                    let submissions = [...this.state.submissions];
-                    submission.isEditing = false;
-                    submissions[this.state.submissionIndex] = submission;
-                    this.submissionsDb
-                        .doc(this.state.submissionToEdit.userUid)
-                        .collection('submissions')
-                        .doc(this.state.submissionToEdit.name)
-                        .delete()
-                        .then(
-                            () => {
-                                this.setState({
-                                    submissions,
-                                })
-                                alert('Successfully edited!')
-                                window.location.reload()
-                            }
-                        ).catch(
-                            error => alert(error)
-                        )
+                    // let submissions = [...this.state.submissions];
+                    // let submission = this.state.submissionToReject;
+                    // submission.status = 'rejected';
+                    // submissions[this.state.submissionIndex] = submission;
+                    this.setState({
+                        // submissions: submissions,
+                        rejectDialogOpened: false,
+                    });
                 }
             )
+        // update the submission docs with new status
 
     }
+
 
 
     generateTable() {
@@ -310,19 +290,19 @@ export default class Admin extends React.Component {
                                 : submission.status}{' '}
                         </TableCell>
                         <TableCell>
-                            <Button size = 'small' onClick={() => {
+                            <Button size='small' onClick={() => {
                                 this.handleConfirmEdit(index)
                             }}> Confirm Changes </Button>
-                            <Button size = 'small' onClick={() => {
+                            <Button size='small' onClick={() => {
                                 let submissions = [...this.state.submissions];
                                 let submission = this.state.submissionToEdit;
                                 submission.isEditing = false;
                                 submissions[index] = submission;
-                                
+
                                 this.setState({
-                                    submissions : submissions
+                                    submissions: submissions
                                 })
-                                
+
                             }}> Cancel </Button>
                         </TableCell>
                     </TableRow>
@@ -344,7 +324,6 @@ export default class Admin extends React.Component {
             })
         )
     }
-
 
 
     render() {
@@ -376,22 +355,20 @@ export default class Admin extends React.Component {
                 </Dialog>
                 <Dialog
                     onClose={() => {
-                        this.setState({ deleteDialogOpened: false });
+                        this.setState({ rejectDialogOpened: false });
                     }}
-                    open={this.state.deleteDialogOpened}>
+                    open={this.state.rejectDialogOpened}>
                     <DialogTitle>Are you sure?</DialogTitle>
                     <DialogContent>
                         <DialogContentText>
-                            {'Once you press delete there is no turning back, the submission, ' +
-                                this.state.submissionToDelete.name +
-                                ' will forever be gone!'}
+                            {"Do you really want to reject this submission " + this.state.submissionToReject.name + " with the comment " + this.state.comment + "?"}
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
-                        <Button onClick={() => this.deleteSubmission()}>Delete</Button>
+                        <Button onClick={() => this.rejectSubmission()}>Reject</Button>
                         <Button
                             onClick={() => {
-                                this.setState({ deleteDialogOpened: false });
+                                this.setState({ rejectDialogOpened: false });
                             }}>
                             Cancel
                         </Button>
