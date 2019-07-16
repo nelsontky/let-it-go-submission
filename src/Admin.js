@@ -16,7 +16,7 @@ import {
     Dialog,
     DialogActions,
     DialogContentText,
-    Input,
+    TextField,
 } from '@material-ui/core';
 
 export default class Admin extends React.Component {
@@ -24,89 +24,117 @@ export default class Admin extends React.Component {
         super(props);
         this.submissionsDb = firebase.firestore().collection('userSubmissions');
         this.toiletDb = firebase.firestore().collection('toilets');
+        this.reviewsDb = firebase.firestore().collection('reviews')
         this.state = {
             submissions: [],
             submissionToReject: {},
             submissionToApprove: {},
-            
+            remarks: ''
+
         };
         this.getAllSubmissions();
 
     }
 
-    componentWiUpdate() {
-        this.getAllSubmissions();
-    }
+
 
     getAllSubmissions() {
-        let users = [];
+        let newSubmissions = [];
+        const map = new Map();
+
         this.submissionsDb
             .get()
-            .then(querySnapshot => {
-                querySnapshot.forEach(user => {
-                    users.push(user.data().currentUser.uid);
+            .then(users => {
+                users.forEach(userObj => {
+                    let user = userObj.data().currentUser.uid;
+
+                    this.submissionsDb
+                        .doc(user)
+                        .collection('submissions')
+                        .onSnapshot(querySnapshot => {
+                            querySnapshot.forEach(submission => {
+                                let obj = {
+                                    userUid: user,
+                                    docId: submission.id,
+                                    date: submission.data().date,
+                                    isFemale: submission.data().facilities.female,
+                                    isMale: submission.data().facilities.male,
+                                    isHandicapped: submission.data().facilities.handicapped,
+                                    isSeparateHandicapped: submission.data().facilities
+                                        .separateHandicapped,
+                                    hasHose: submission.data().facilities.hose,
+                                    hasShowerHeads: submission.data().facilities.showerHeads,
+                                    hasWaterCooler: submission.data().facilities.waterCooler,
+                                    lat: submission.data().lat,
+                                    lon: submission.data().lon,
+                                    name: submission.data().name,
+                                    paranomaUrl: submission.data().panorama.url,
+
+                                    // editing
+                                    status: submission.data().status.approval,
+                                    remarks: submission.data().status.remarks,
+                                }
+
+                                if (!map.has(obj.docId)) {
+                                    map.set(obj.docId, true)
+                                    newSubmissions.push(obj)
+                                } else {
+                                    // if not in array then replace with the new updated one at the same position
+
+
+                                }
+
+                            });
+
+                            querySnapshot.docChanges().forEach(
+                                (change) => {
+                                    let idToRemove = change.doc.id
+                                    let submissionToRemove = newSubmissions.find(element => element.docId == idToRemove)
+                                    let rowId = submissionToRemove.rowId
+                                    newSubmissions[rowId] = {
+                                        userUid: user,
+                                        docId: submissionToRemove.id,
+                                        date: change.doc.data().date,
+                                        isFemale: change.doc.data().facilities.female,
+                                        isMale: change.doc.data().facilities.male,
+                                        isHandicapped: change.doc.data().facilities.handicapped,
+                                        isSeparateHandicapped: change.doc.data().facilities
+                                            .separateHandicapped,
+                                        hasHose: change.doc.data().facilities.hose,
+                                        hasShowerHeads: change.doc.data().facilities.showerHeads,
+                                        hasWaterCooler: change.doc.data().facilities.waterCooler,
+                                        lat: change.doc.data().lat,
+                                        lon: change.doc.data().lon,
+                                        name: change.doc.data().name,
+                                        paranomaUrl: change.doc.data().panorama.url,
+
+                                        // editing
+                                        status: change.doc.data().status.approval,
+                                        remarks: change.doc.data().status.remarks,
+                                    };
+
+                                }
+                            )
+
+
+
+                            let index = -1;
+                            newSubmissions.map(
+                                submission => {
+                                    index++
+                                    submission.rowId = index
+                                    return submission
+                                }
+                            )
+                            this.setState({ submissions: newSubmissions })
+                        })
+
+
+
                 });
-            })           
-            .then(() => {
-                users.forEach(user => this.getSubmissionsForUser(user));
             })
-            .catch(error => {
-                alert('Error in getting submissions: ' + error);
-            });
+
     }
-
-    getSubmissionsForUser(user) {
-        this.submissionsDb
-            .doc(user)
-            .collection('submissions')
-            .onSnapshot(querySnapshot => {
-                let newSubmissions = [];
-                // resets the submissions in state back to empty so it doesnt accumulate each time it rerenders from a change
-                this.setState({
-                    submissions : []
-                })
-                querySnapshot.forEach(submission => {                    
-                    newSubmissions.push({
-                        userUid: user,
-                        docId: submission.id,
-                        date: submission.data().date,
-                        isFemale: submission.data().facilities.female,
-                        isMale: submission.data().facilities.male,
-                        isHandicapped: submission.data().facilities.handicapped,
-                        isSeparateHandicapped: submission.data().facilities
-                            .separateHandicapped,
-                        hasHose: submission.data().facilities.hose,
-                        hasShowerHeads: submission.data().facilities.showerHeads,
-                        hasWaterCooler: submission.data().facilities.waterCooler,
-                        lat: submission.data().lat,
-                        lon: submission.data().lon,
-                        name: submission.data().name,
-                        paranomaUrl: submission.data().panorama.paranomaUrl,
-
-                        // editing
-                        status: submission.data().status.approval,
-                        remarks: submission.data().status.remarks,
-                        isEditing: false
-                    });
-                });
-                this.setState(prevState => ({
-                    submissions: [...prevState.submissions, newSubmissions].flatMap(x => x),
-                    refresh : !this.state.refresh
-                }));
-            })
-            // .then(() => {
-            //     // this.setState(prevState => ({
-            //     //     submissions: [...prevState.submissions, newSubmissions].flatMap(x => x),
-            //     // }));
-            // })
-            // .then(() => {
-            //     // this.setState(prevState => ({
-            //     //     submissions: prevState.submissions.flatMap(x => x),
-            //     // }));
-            //     console.log(this.state.submissions);
-            // }).catch(error => alert("Error in getting submissions second function: " + error));
-    }
-
     generateFacilities(submission) {
         let result = '';
 
@@ -147,19 +175,9 @@ export default class Admin extends React.Component {
                         let submission = this.state.submissions[index];
                         switch (event.target.value) {
 
-                            case "Approved":
+                            case "Approve":
 
                                 this.triggerDialogToConfirmApprove(submission, index)
-                                break;
-                            case "Edit":
-                                let submissions = [...this.state.submissions];
-                                submission.isEditing = true;
-                                submissions[index] = submission;
-                                this.setState({
-                                    submissions: submissions,
-                                    submissionIndex: index,
-                                    submissionToEdit: submission
-                                })
                                 break;
                             case "Reject":
                                 this.handleRejectSubmissionClicked(submission, index);
@@ -167,7 +185,6 @@ export default class Admin extends React.Component {
                         }
 
                     }}>
-                    <MenuItem value={'Edit'}>Edit</MenuItem>
                     <MenuItem value={'Approve'}>Approve</MenuItem>
                     <MenuItem value={'Reject'}>Reject</MenuItem>
                 </Select>
@@ -183,7 +200,9 @@ export default class Admin extends React.Component {
     }
     approveSubmission() {
 
+        let remarks = this.state.remarks[this.state.submissionIndex]
         let submission = this.state.submissionToApprove;
+
         this.submissionsDb
             .doc(this.state.submissionToApprove.userUid)
             .collection('submissions')
@@ -191,7 +210,7 @@ export default class Admin extends React.Component {
             .update({
                 status: {
                     approval: "approved",
-                    remarks : ""
+                    remarks: remarks
                 }
             })
 
@@ -220,13 +239,20 @@ export default class Admin extends React.Component {
                     // submissions: submissions,
                     approveDialogOpened: false,
                 });
-                alert(submission.name + ' has been approved!');
+
             });
+
+
+        // create a review object in the review database
+        this.reviewsDb
+            .doc(submission.name)
+            .set({})
+
+
     }
 
 
     handleRejectSubmissionClicked(submission, index) {
-        alert(submission.name)
         this.setState({
             rejectDialogOpened: true,
             submissionToReject: submission,
@@ -236,90 +262,71 @@ export default class Admin extends React.Component {
     }
 
     rejectSubmission() {
-        // update the rejection reason in the docs 
+        // update the rejection reason in the firestore
+        let remarks = this.state.remarks[this.state.submissionIndex];
+
         this.submissionsDb
             .doc(this.state.submissionToReject.userUid)
             .collection('submissions')
             .doc(this.state.submissionToReject.docId)
             .update({
                 status: {
-                    approval : 'rejected',
-                    remarks : ''
+                    approval: 'rejected',
+                    remarks: remarks ? remarks : this.state.submissionToReject.remarks
                 }
             }).then(
                 () => {
-                    // let submissions = [...this.state.submissions];
-                    // let submission = this.state.submissionToReject;
-                    // submission.status = 'rejected';
-                    // submissions[this.state.submissionIndex] = submission;
+
                     this.setState({
-                        // submissions: submissions,
                         rejectDialogOpened: false,
                     });
                 }
             )
-        // update the submission docs with new status
+
+    }
+
+    handleTextChange(event, rowId) {
+
+        this.setState({
+            remarks: {
+                [rowId]: event.target.value
+            }
+        })
+
 
     }
 
 
 
     generateTable() {
-        let index = -1;
         return (
             this.state.submissions.map(submission => {
-                index++;
-                return submission.isEditing
-                    ? (<TableRow>
-                        <TableCell>
-                            <Input
-                                defaultValue={this.state.submissions[index].name}
-                                multiline
-                                fullWidth
-                                onChange={(event) => this.setState({
-                                    tempName: event.target.value,
-                                    submissionToEdit: submission
-                                })}
-                            />
-                        </TableCell>
-                        <TableCell>{submission.userUid}</TableCell>
+                return (
+                    <TableRow>
+                        <TableCell>{submission.name}</TableCell>
                         <TableCell>{this.generateFacilities(submission)}</TableCell>
+                        <TableCell size='small' >
+                            {
+                                <TextField
+                                    multiline
+                                    defaultValue={submission.remarks}
+                                    fullWidth
+                                    margin="dense"
+                                    inputProps={{ style: { fontSize: 15 } }}
+                                    onChange={(event) => {
+                                        this.handleTextChange(event, submission.rowId)
+                                    }}
+                                />
+                            }
+                        </TableCell>
                         <TableCell>
                             {submission.status == undefined
                                 ? 'Pending'
                                 : submission.status}{' '}
                         </TableCell>
-                        <TableCell>
-                            <Button size='small' onClick={() => {
-                                this.handleConfirmEdit(index)
-                            }}> Confirm Changes </Button>
-                            <Button size='small' onClick={() => {
-                                let submissions = [...this.state.submissions];
-                                let submission = this.state.submissionToEdit;
-                                submission.isEditing = false;
-                                submissions[index] = submission;
-
-                                this.setState({
-                                    submissions: submissions
-                                })
-
-                            }}> Cancel </Button>
-                        </TableCell>
+                        <TableCell>{this.submissionAction(submission.rowId)}</TableCell>
                     </TableRow>
-                    )
-                    : (
-                        <TableRow>
-                            <TableCell>{submission.name}</TableCell>
-                            <TableCell>{submission.userUid}</TableCell>
-                            <TableCell>{this.generateFacilities(submission)}</TableCell>
-                            <TableCell>
-                                {submission.status == undefined
-                                    ? 'Pending'
-                                    : submission.status}{' '}
-                            </TableCell>
-                            <TableCell>{this.submissionAction(index)}</TableCell>
-                        </TableRow>
-                    )
+                )
 
             })
         )
@@ -338,16 +345,20 @@ export default class Admin extends React.Component {
                     <DialogTitle>Are you sure?</DialogTitle>
                     <DialogContent>
                         <DialogContentText>
-                            {'Once you press approve the submission, ' +
+                            {"Do you really want to approve " +
                                 this.state.submissionToApprove.name +
-                                ' will be pushed to the main database'}
+                                " with the remarks " +
+                                (this.state.remarks[this.state.submissionIndex]
+                                    ? this.state.remarks[this.state.submissionIndex]
+                                    : this.state.submissionToApprove.remarks)
+                                + "?"}
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={() => this.approveSubmission()}>Approve</Button>
                         <Button
                             onClick={() => {
-                                this.setState({ approveDialogOpened: false });
+                                this.setState({ approveDialogOpened: false })
                             }}>
                             Cancel
                         </Button>
@@ -361,7 +372,13 @@ export default class Admin extends React.Component {
                     <DialogTitle>Are you sure?</DialogTitle>
                     <DialogContent>
                         <DialogContentText>
-                            {"Do you really want to reject this submission " + this.state.submissionToReject.name + " with the comment " + this.state.comment + "?"}
+                            {"Do you really want to reject " +
+                                this.state.submissionToReject.name +
+                                " with the remarks " +
+                                (this.state.remarks[this.state.submissionIndex]
+                                    ? this.state.remarks[this.state.submissionIndex]
+                                    : this.state.submissionToReject.remarks)
+                                + "?"}
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
@@ -378,12 +395,12 @@ export default class Admin extends React.Component {
 
 
 
-                <Table>
+                <Table onRowSelection={this.onRowSelection}>
                     <TableHead>
                         <TableRow>
                             <TableCell>Location</TableCell>
-                            <TableCell>User </TableCell>
                             <TableCell>Facilities</TableCell>
+                            <TableCell>Remarks </TableCell>
                             <TableCell>Status</TableCell>
                             <TableCell>Action</TableCell>
                         </TableRow>
