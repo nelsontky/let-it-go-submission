@@ -17,20 +17,29 @@ export default class RandomToiletQuote extends React.Component {
   constructor(props) {
     super(props);
     this.state = {};
+    this.unmounted = false;
+    this.db = firebase.firestore();
+  }
 
-    firebase
-      .firestore()
+  componentDidMount() {
+    this.db
       .collection('toiletQuotes')
       .doc('quotes')
       .get()
       .then(doc => {
         const quotes = doc.data().quotes;
         const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
-        this.setState({quote: '“' + randomQuote + '”'});
+        if (!this.unmounted) {
+          this.setState({quote: '“' + randomQuote + '”'});
+        }
       })
       .catch(() =>
         this.setState({quote: '“Feces are meant to be released in peace.”'}),
       );
+  }
+
+  componentWillUnmount() {
+    this.unmounted = true;
   }
 
   render() {
