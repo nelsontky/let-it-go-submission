@@ -7,7 +7,7 @@ import Button from '@material-ui/core/Button';
 export default class SwitchPortals extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {isAdmin: false};
+    this.state = {isAdmin: true};
   }
 
   render() {
@@ -18,7 +18,7 @@ export default class SwitchPortals extends React.Component {
             onClick={() => this.setState({isAdmin: !this.state.isAdmin})}
             variant="contained"
             color="secondary">
-            {`Change to ${this.state.isAdmin ? 'submission' : 'admin'} portal`}
+            {`Switch to ${this.state.isAdmin ? 'submission' : 'admin'} portal`}
           </Button>
         </div>
         {!this.state.isAdmin ? (
