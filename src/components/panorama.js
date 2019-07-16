@@ -2,7 +2,7 @@ import React from 'react';
 
 class Panorama extends React.Component {
   componentDidMount() {
-    window.pannellum.viewer('panorama', {
+    this.viewer = window.pannellum.viewer('panorama', {
       type: 'equirectangular',
       panorama: this.props.url,
       vaov: 45,
@@ -12,8 +12,8 @@ class Panorama extends React.Component {
     });
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
-    return false;
+  componentWillUnmount() {
+    this.viewer.destroy();
   }
 
   render() {

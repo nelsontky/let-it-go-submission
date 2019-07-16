@@ -128,8 +128,6 @@ class Submitted extends React.Component {
   constructor(props) {
     super(props);
 
-    this.submissionKey = 0;
-
     this.state = {
       submissions: [],
       previewId: '',
@@ -211,7 +209,7 @@ class Submitted extends React.Component {
                   <TableRow key={i}>
                     <TableCell>
                       <Submission
-                        key={this.submissionKey++}
+                        key={this.state.sortBy}
                         handleEdit={this.props.handleEdit}
                         handleDelete={this.props.handleDelete}
                         handlePreview={this.handlePreview}
