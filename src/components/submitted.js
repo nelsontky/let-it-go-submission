@@ -133,7 +133,7 @@ class Submitted extends React.Component {
       submissions: [],
       previewId: '',
       loading: true,
-      sortBy: 'name',
+      sortBy: 'status',
     };
 
     // Read all of current user's submissions from firestore, then adds all
@@ -148,7 +148,8 @@ class Submitted extends React.Component {
         }),
       )
       .then(() => {
-        submissions.sort(compareByName);
+        // Sorts by status
+        submissions.sort(compareByStatus);
         this.setState({submissions, loading: false});
       });
 
