@@ -34,6 +34,7 @@ class App extends React.Component {
       progress: 0,
       progressShown: false,
       error: false,
+      submissionsShown: false,
 
       // Fields in charge of editing.
       edit: false,
@@ -47,12 +48,18 @@ class App extends React.Component {
     this.db = firebase.firestore();
     this.storage = firebase.storage();
 
+    // Document created by user
+    this.doc = this.db
+      .collection('userSubmissions')
+      .doc(this.props.currentUser.uid);
+
     this.handleInputChange = this.handleInputChange.bind(this);
     this.handleMapClick = this.handleMapClick.bind(this);
     this.updateMyLocation = this.updateMyLocation.bind(this);
     this.setToCurrentLocation = this.setToCurrentLocation.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleEdit = this.handleEdit.bind(this);
+    this.handleDelete = this.handleDelete.bind(this);
   }
 
   // Handles state of input forms
@@ -111,11 +118,7 @@ class App extends React.Component {
 
     // If user is editing submission and does not choose to reupload panorama
     if (this.state.edit && !this.state.editPanorama) {
-      const doc = this.db
-        .collection('userSubmissions')
-        .doc(this.props.currentUser.uid);
-
-      doc
+      this.doc
         .collection('submissions')
         .doc()
         .set({
@@ -140,10 +143,7 @@ class App extends React.Component {
         })
         .then(() => {
           // Delete old version.
-          this.db
-            .collection('userSubmissions')
-            // Set doc name to user uid
-            .doc(this.props.currentUser.uid)
+          this.doc
             .collection('submissions')
             .doc(this.state.editDocId)
             .delete();
@@ -196,13 +196,8 @@ class App extends React.Component {
               () => {
                 // Upload completed successfully
                 uploadTask.snapshot.ref.getDownloadURL().then(url => {
-                  const doc = this.db
-                    .collection('userSubmissions')
-                    // Set doc name to user uid
-                    .doc(this.props.currentUser.uid);
-
                   // To get the document does not exist message away
-                  doc.set({
+                  this.doc.set({
                     currentUser: {
                       name: this.props.currentUser.displayName,
                       email: this.props.currentUser.email,
@@ -211,7 +206,7 @@ class App extends React.Component {
                     },
                   });
 
-                  doc
+                  this.doc
                     .collection('submissions')
                     .doc()
                     .set({
@@ -235,10 +230,7 @@ class App extends React.Component {
                       // If is editing submission, delete old version and old
                       // panorama
                       if (this.state.edit) {
-                        this.db
-                          .collection('userSubmissions')
-                          // Set doc name to user uid
-                          .doc(this.props.currentUser.uid)
+                        this.doc
                           .collection('submissions')
                           .doc(this.state.editDocId)
                           .delete();
@@ -258,6 +250,26 @@ class App extends React.Component {
           'blob',
         );
       }
+    }
+  }
+
+  // Handle the deleting of submission. Meant to be passed as a prop
+  // into <Submitted /> component.
+  handleDelete(fileName, submissionId) {
+    if (window.confirm('Are you sure you want to delete this submission?')) {
+      // Deletes document from firestore.
+      this.doc
+        .collection('submissions')
+        .doc(submissionId)
+        .delete()
+        .then(() =>
+          // Deletes panorama image from storage.
+          this.storage
+            .ref()
+            .child(fileName)
+            .delete()
+            .then(() => window.location.reload()),
+        );
     }
   }
 
@@ -416,7 +428,7 @@ class App extends React.Component {
           </FormGroup>
           <br />
 
-          {/* Present user with choice to edit Panorama image if edit 
+          {/* Present user with choice to edit Panorama image if edit
           mode is on */}
           {this.state.edit && (
             <div>
@@ -443,7 +455,7 @@ class App extends React.Component {
             style={{display: 'none'}}
           />
 
-          {/* Do not show upload Panorama button if in edit mode and 
+          {/* Do not show upload Panorama button if in edit mode and
           edit panorama is not chosen */}
           {(!this.state.edit || this.state.editPanorama) && (
             <label htmlFor="contained-button-file">
@@ -488,11 +500,22 @@ class App extends React.Component {
           )}
         </form>
 
-        <Submitted
-          uid={this.props.currentUser.uid}
-          db={this.db}
-          handleEdit={this.handleEdit}
-        />
+        <Button
+          color="secondary"
+          onClick={() =>
+            this.setState({submissionsShown: !this.state.submissionsShown})
+          }>
+          {`${this.state.submissionsShown ? 'Hide' : 'Show'} your submissions`}
+        </Button>
+
+        {this.state.submissionsShown && (
+          <Submitted
+            uid={this.props.currentUser.uid}
+            doc={this.doc}
+            handleEdit={this.handleEdit}
+            handleDelete={this.handleDelete}
+          />
+        )}
       </Layout>
     );
   }
