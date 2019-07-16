@@ -298,6 +298,7 @@ class App extends React.Component {
     // console.log(this.state);
     return (
       <Layout>
+        <h1>Submit to Let It Go</h1>
         {this.state.edit && <h6>Editing submission</h6>}
         {/* Main form */}
         <form onSubmit={this.handleSubmit}>
@@ -462,9 +463,6 @@ class App extends React.Component {
               <Button variant="contained" component="span">
                 Select panorama image
               </Button>
-              {this.fileInput.current != null &&
-                this.fileInput.current.files[0] != null &&
-                ` ${this.fileInput.current.files[0].name}`}
             </label>
           )}
           <br />

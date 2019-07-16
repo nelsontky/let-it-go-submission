@@ -1,4 +1,5 @@
 import React from "react";
+import Layout from './components/layout';
 import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth";
 import firebase from "./utils/firebase";
 import App from "./App";
@@ -28,14 +29,14 @@ export default class Main extends React.Component {
   render() {
     if (!this.state.isSignedIn) {
       return (
-        <div>
+        <Layout>
           <h1>My App</h1>
           <p>Please sign-in:</p>
           <StyledFirebaseAuth
             uiConfig={uiConfig}
             firebaseAuth={firebase.auth()}
           />
-        </div>
+        </Layout>
       );
     }
 
