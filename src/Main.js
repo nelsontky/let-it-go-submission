@@ -1,64 +1,69 @@
-import React from "react";
+import React from 'react';
 import Layout from './components/layout';
-import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth";
-import firebase from "./utils/firebase";
-import App from "./App";
-import Admin from "./Admin";
+import RandomToiletQuote from './components/randomToiletQuote';
+import SwitchPortals from './components/switchPortals';
+import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
+import firebase from './utils/firebase';
+import App from './App';
+
+import Button from '@material-ui/core/Button';
+
+function isNelsonOrZx(email) {
+  return email === 'lowzxx@gmail.com' || email === 'nelsontkyi@gmail.com';
+}
 
 // Implement Google and Firebase signin
 
 const uiConfig = {
-  // We will display Google and Facebook as auth providers.
-  signInOptions: [firebase.auth.GoogleAuthProvider.PROVIDER_ID]
+  signInOptions: [firebase.auth.GoogleAuthProvider.PROVIDER_ID],
 };
 
 export default class Main extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      isSignedIn: false
+      isSignedIn: false,
     };
   }
 
   componentDidMount() {
     this.unregisterAuthObserver = firebase
       .auth()
-      .onAuthStateChanged(user => this.setState({ isSignedIn: !!user }));
+      .onAuthStateChanged(user => this.setState({isSignedIn: !!user}));
   }
 
   render() {
     if (!this.state.isSignedIn) {
       return (
         <Layout>
-          <h1>My App</h1>
+          <h1>Submit to Let It Go</h1>
           <p>Please sign-in:</p>
           <StyledFirebaseAuth
             uiConfig={uiConfig}
             firebaseAuth={firebase.auth()}
           />
+          <RandomToiletQuote />
         </Layout>
-      );
-    }
-
-    if (
-      firebase.auth().currentUser.email == "lowzxx@gmail.com" ||
-      firebase.auth().currentUser.email == "nelsontkyi@gmail.comz"
-    ) {
-      return (
-        <div>
-          <Admin />
-          <div style={{ textAlign: "center" }}>
-            <button onClick={() => firebase.auth().signOut()}>Sign Out</button>
-          </div>
-        </div>
       );
     } else {
       return (
         <div>
-          <App currentUser={firebase.auth().currentUser} />
-          <div style={{ textAlign: "center" }}>
-            <button onClick={() => firebase.auth().signOut()}>Sign Out</button>
-          </div>
+          <Layout>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={() => firebase.auth().signOut()}>
+              Sign Out
+            </Button>
+          </Layout>
+
+          {/* Give option to switch portals if is admin logging in, else just
+          show the submission portal */}
+          {isNelsonOrZx(firebase.auth().currentUser.email) ? (
+            <SwitchPortals currentUser={firebase.auth().currentUser} />
+          ) : (
+            <App currentUser={firebase.auth().currentUser} />
+          )}
         </div>
       );
     }
