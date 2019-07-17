@@ -179,7 +179,7 @@ class App extends React.Component {
             // Uploads image to firebase storage
             let uploadTask = this.storage
               .ref()
-              .child(fileName)
+              .child(`${this.props.currentUser.uid}/${fileName}`)
               .put(blob);
 
             uploadTask.on(
@@ -196,11 +196,11 @@ class App extends React.Component {
               () => {
                 // Upload completed successfully
                 uploadTask.snapshot.ref.getDownloadURL().then(url => {
-                  // To get the document does not exist message away
+                  // Keys in current user info into the user's document,
+                  // excludes email for privacy reasons.
                   this.doc.set({
                     currentUser: {
                       name: this.props.currentUser.displayName,
-                      email: this.props.currentUser.email,
                       photoURL: this.props.currentUser.photoURL,
                       uid: this.props.currentUser.uid,
                     },
@@ -238,7 +238,9 @@ class App extends React.Component {
                         // Delete old panorama
                         this.storage
                           .ref()
-                          .child(this.state.panorama.fileName)
+                          .child(
+                            `${this.props.currentUser.uid}/${this.state.panorama.fileName}`,
+                          )
                           .delete();
                       }
                     })
@@ -266,7 +268,7 @@ class App extends React.Component {
           // Deletes panorama image from storage.
           this.storage
             .ref()
-            .child(fileName)
+            .child(`${this.props.currentUser.uid}/${fileName}`)
             .delete()
             .then(() => window.location.reload()),
         );
