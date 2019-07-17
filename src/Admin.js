@@ -121,30 +121,18 @@ export default class Admin extends React.Component {
     });
   }
   generateFacilities(submission) {
-    let result = '';
-
-    if (submission.isMale) {
-      result += '🙋‍♂️';
-    }
-    if (submission.isFemale) {
-      result += '🙋‍';
-    }
-    if (submission.hasWaterCooler) {
-      result += '🚰';
-    }
-    if (submission.hasShowerHeads) {
-      result += '🚿';
-    }
-    if (submission.hasHose) {
-      result += '💦';
-    }
-    if (submission.isHandicapped) {
-      result += '♿';
-    }
-    if (submission.isSeparateHandicapped) {
-      result += '😭';
-    }
-    return result;
+    return (
+      <div style={{textAlign: 'center'}}>
+        {submission.isMale && <i className="em-svg em-man-raising-hand" />}
+        {submission.isFemale && <i className="em-svg em-woman-raising-hand" />}
+        {submission.hasWaterCooler && (
+          <i className="em-svg em-potable_water" />
+        )}{' '}
+        {submission.hasShowerHeads && <i className="em-svg em-shower" />}{' '}
+        {submission.hasHose && <i className="em-svg em-sweat_drops" />}{' '}
+        {submission.isHandicapped && <i className="em-svg em-wheelchair" />}
+      </div>
+    );
   }
   submissionAction(index) {
     const values = {
