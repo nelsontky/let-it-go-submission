@@ -85,6 +85,7 @@ class Submission extends React.Component {
           <Button
             variant="contained"
             color="primary"
+            disabled={this.submission.status.approval === 'approved'}
             onClick={() =>
               this.props.handleEdit(this.submission, this.props.children.id)
             }>
