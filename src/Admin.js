@@ -285,7 +285,6 @@ export default class Admin extends React.Component {
   }
   generateTable() {
     return this.state.submissions.map((submission, i) => {
-      console.log(submission);
       return (
         <React.Fragment key={i}>
           <TableRow>
