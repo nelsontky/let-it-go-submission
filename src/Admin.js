@@ -27,6 +27,9 @@ export default class Admin extends React.Component {
     this.submissionsDb = firebase.firestore().collection('userSubmissions');
     this.toiletDb = firebase.firestore().collection('toilets');
     this.reviewsDb = firebase.firestore().collection('reviews');
+
+    this.storage = firebase.storage();
+
     this.state = {
       submissions: [],
       submissionToReject: {},
@@ -66,6 +69,9 @@ export default class Admin extends React.Component {
                 lon: submission.data().lon,
                 name: submission.data().name,
                 paranomaUrl: submission.data().panorama.url,
+
+                // Needed for reupload of file
+                panoramaFileName: submission.data().panorama.fileName,
 
                 // editing
                 status: submission.data().status.approval,
@@ -178,34 +184,72 @@ export default class Admin extends React.Component {
       .update({
         status: {
           approval: 'approved',
-          remarks: remarks,
+          // In case of empty remarks
+          remarks: remarks == null ? "" : remarks,
         },
-      }); // submission to official toilet database
-    this.toiletDb
-      .doc(submission.name)
-      .set({
-        facilities: {
-          female: submission.isFemale,
-          handicapped: submission.isHandicapped,
-          hose: submission.hasHose,
-          male: submission.isMale,
-          separateHandicapped: submission.isSeparateHandicapped,
-          showerHeads: submission.hasShowerHeads,
-          waterCooler: submission.hasWaterCooler,
-        },
-        lat: submission.lat,
-        lon: submission.lon,
-        name: submission.name,
-        paranomaUrl: submission.paranomaUrl,
-      })
-      .then(() => {
-        this.setState({
-          // submissions: submissions,
-          approveDialogOpened: false,
-        });
-      }); // create a review object in the review database
-    this.reviewsDb.doc(submission.name).set({});
+      });
+
+    // submission to official toilet database
+    // Downloads panorama to reupload
+    this.storage
+      .refFromURL(submission.paranomaUrl)
+      .getDownloadURL()
+      .then(url => {
+        // Downloading panorama
+        var xhr = new XMLHttpRequest();
+        xhr.responseType = 'blob';
+        xhr.onload = event => {
+          const blob = xhr.response;
+
+          // Uploading the downloaded blob
+          const uploadTask = this.storage
+            .ref()
+            .child(`approved/${submission.panoramaFileName}`)
+            .put(blob);
+
+          uploadTask.on(
+            'state_changed',
+            null,
+            error => console.log(error),
+            () => {
+              // Upload successful
+              uploadTask.snapshot.ref.getDownloadURL().then(panoramaUrl => {
+
+                // Submit to main db, changes the panoramaUrl too (This is
+                // largely your original code @zx
+                this.toiletDb
+                  .doc(submission.name)
+                  .set({
+                    facilities: {
+                      female: submission.isFemale,
+                      handicapped: submission.isHandicapped,
+                      hose: submission.hasHose,
+                      male: submission.isMale,
+                      separateHandicapped: submission.isSeparateHandicapped,
+                      showerHeads: submission.hasShowerHeads,
+                      waterCooler: submission.hasWaterCooler,
+                    },
+                    lat: submission.lat,
+                    lon: submission.lon,
+                    name: submission.name,
+                    paranomaUrl: panoramaUrl,
+                  })
+                  .then(() => {
+                    this.setState({
+                      // submissions: submissions,
+                      approveDialogOpened: false,
+                    });
+                  }); // create a review object in the review database
+                this.reviewsDb.doc(submission.name).set({});
+              });
+            },
+          );
+        };
+        xhr.open('GET', url);
+        xhr.send();
+      });
   }
+
   handleRejectSubmissionClicked(submission, index) {
     this.setState({
       rejectDialogOpened: true,
@@ -241,6 +285,7 @@ export default class Admin extends React.Component {
   }
   generateTable() {
     return this.state.submissions.map((submission, i) => {
+      console.log(submission);
       return (
         <React.Fragment key={i}>
           <TableRow>
