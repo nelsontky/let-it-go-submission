@@ -180,7 +180,7 @@ export default class Admin extends React.Component {
     this.submissionsDb
       .doc(this.state.submissionToApprove.userUid)
       .collection('submissions')
-      .doc(this.state.submissionToApprove.name)
+      .doc(this.state.submissionToApprove.docId)
       .update({
         status: {
           approval: 'approved',
