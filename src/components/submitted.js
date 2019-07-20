@@ -114,7 +114,6 @@ class Submission extends React.Component {
             year: 'numeric',
             hour: 'numeric',
             minute: 'numeric',
-            second: 'numeric',
           })}
         </div>
         <br />
