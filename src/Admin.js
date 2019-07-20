@@ -1,5 +1,6 @@
 import React from 'react';
 import Preview from './components/preview';
+import SortingDropdown from './components/submissionsSortingDropdown';
 
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
@@ -30,12 +31,15 @@ export default class Admin extends React.Component {
 
     this.storage = firebase.storage();
 
+    this.handleSorting = this.handleSorting.bind(this);
+
     this.state = {
       submissions: [],
       submissionToReject: {},
       submissionToApprove: {},
       remarks: '',
       previewRow: null,
+      sortBy: 'date',
     };
     this.getAllSubmissions();
   }
@@ -121,11 +125,17 @@ export default class Admin extends React.Component {
               submission.rowId = index;
               return submission;
             });
+
+            // Sorts by date by default
+            newSubmissions.sort(compareByDate);
+            console.log(newSubmissions);
+
             this.setState({submissions: newSubmissions});
           });
       });
     });
   }
+
   generateFacilities(submission) {
     return (
       <div style={{textAlign: 'center'}}>
@@ -140,6 +150,7 @@ export default class Admin extends React.Component {
       </div>
     );
   }
+
   submissionAction(index) {
     const values = {
       age: [10, 20, 30],
@@ -167,6 +178,7 @@ export default class Admin extends React.Component {
       </FormControl>
     );
   }
+
   triggerDialogToConfirmApprove(submission, index) {
     this.setState({
       submissionToApprove: submission,
@@ -174,6 +186,7 @@ export default class Admin extends React.Component {
       approveDialogOpened: true,
     });
   }
+
   approveSubmission() {
     let remarks = this.state.remarks[this.state.submissionIndex];
     let submission = this.state.submissionToApprove;
@@ -185,7 +198,7 @@ export default class Admin extends React.Component {
         status: {
           approval: 'approved',
           // In case of empty remarks
-          remarks: remarks == null ? "" : remarks,
+          remarks: remarks == null ? '' : remarks,
         },
       });
 
@@ -196,7 +209,7 @@ export default class Admin extends React.Component {
       .getDownloadURL()
       .then(url => {
         // Downloading panorama
-        var xhr = new XMLHttpRequest();
+        let xhr = new XMLHttpRequest();
         xhr.responseType = 'blob';
         xhr.onload = event => {
           const blob = xhr.response;
@@ -214,9 +227,8 @@ export default class Admin extends React.Component {
             () => {
               // Upload successful
               uploadTask.snapshot.ref.getDownloadURL().then(panoramaUrl => {
-
                 // Submit to main db, changes the panoramaUrl too (This is
-                // largely your original code @zx
+                // largely your original code @zx)
                 this.toiletDb
                   .doc(submission.name)
                   .set({
@@ -257,6 +269,7 @@ export default class Admin extends React.Component {
       submissionIndex: index,
     });
   }
+
   rejectSubmission() {
     // update the rejection reason in the firestore
     let remarks = this.state.remarks[this.state.submissionIndex];
@@ -276,6 +289,7 @@ export default class Admin extends React.Component {
         });
       });
   }
+
   handleTextChange(event, rowId) {
     this.setState({
       remarks: {
@@ -283,6 +297,7 @@ export default class Admin extends React.Component {
       },
     });
   }
+
   generateTable() {
     return this.state.submissions.map((submission, i) => {
       return (
@@ -306,6 +321,15 @@ export default class Admin extends React.Component {
                   Hide
                 </Button>
               )}
+            </TableCell>
+            <TableCell>
+              {submission.date.toDate().toLocaleString('default', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: 'numeric',
+              })}
             </TableCell>
             <TableCell>{this.generateFacilities(submission)}</TableCell>
             <TableCell size="small">
@@ -332,7 +356,7 @@ export default class Admin extends React.Component {
           data structure to Nelson's */}
           {this.state.previewRow === submission.rowId && (
             <TableRow>
-              <TableCell colSpan={5}>
+              <TableCell colSpan={6}>
                 <Preview
                   submission={Object.assign(
                     {
@@ -357,6 +381,27 @@ export default class Admin extends React.Component {
       );
     });
   }
+
+  handleSorting(event) {
+    let submissions = this.state.submissions.slice();
+
+    switch (event.target.value) {
+      case 'name':
+        submissions.sort(compareByName);
+        break;
+      case 'date':
+        submissions.sort(compareByDate);
+        break;
+      case 'status':
+        submissions.sort(compareByStatus);
+        break;
+      default:
+        break;
+    }
+
+    this.setState({submissions, sortBy: event.target.value});
+  }
+
   render() {
     return (
       <Paper style={{margin: 20}}>
@@ -415,10 +460,16 @@ export default class Admin extends React.Component {
           </DialogActions>
         </Dialog>
 
+        <SortingDropdown
+          value={this.state.sortBy}
+          handleSorting={this.handleSorting}
+        />
+
         <Table onRowSelection={this.onRowSelection}>
           <TableHead>
             <TableRow>
               <TableCell>Location</TableCell>
+              <TableCell>Submission Date</TableCell>
               <TableCell>Facilities</TableCell>
               <TableCell>Remarks </TableCell>
               <TableCell>Status</TableCell>
@@ -430,4 +481,43 @@ export default class Admin extends React.Component {
       </Paper>
     );
   }
+}
+
+function compareByName(a, b) {
+  return a.name.localeCompare(b.name);
+}
+
+function compareByDate(a, b) {
+  return b.date.toDate() - a.date.toDate();
+}
+
+function compareByStatus(a, b) {
+  let aValue;
+  let bValue;
+
+  switch (a.status) {
+    case 'rejected':
+      aValue = -1;
+      break;
+    case 'approved':
+      aValue = 0;
+      break;
+    default:
+      aValue = 1;
+      break;
+  }
+
+  switch (b.status) {
+    case 'rejected':
+      bValue = -1;
+      break;
+    case 'approved':
+      bValue = 0;
+      break;
+    default:
+      bValue = 1;
+      break;
+  }
+
+  return aValue - bValue;
 }
