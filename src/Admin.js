@@ -19,6 +19,10 @@ import {
   DialogActions,
   DialogContentText,
   TextField,
+  Avatar,
+  ListItem,
+  Container,
+  Typography
 } from '@material-ui/core';
 
 export default class Admin extends React.Component {
@@ -36,6 +40,7 @@ export default class Admin extends React.Component {
       submissionToApprove: {},
       remarks: '',
       previewRow: null,
+      showAcceptedReviews: false
     };
     this.getAllSubmissions();
   }
@@ -47,14 +52,18 @@ export default class Admin extends React.Component {
     this.submissionsDb.get().then(users => {
       users.forEach(userObj => {
         let user = userObj.data().currentUser.uid;
+        console.log(userObj.data().currentUser);
 
         this.submissionsDb
           .doc(user)
           .collection('submissions')
           .onSnapshot(querySnapshot => {
             querySnapshot.forEach(submission => {
+
               let obj = {
                 userUid: user,
+                currentUser: userObj.data().currentUser,
+                userPhoto: userObj.data().currentUser.photoURL,
                 docId: submission.id,
                 date: submission.data().date,
                 isFemale: submission.data().facilities.female,
@@ -121,14 +130,14 @@ export default class Admin extends React.Component {
               submission.rowId = index;
               return submission;
             });
-            this.setState({submissions: newSubmissions});
+            this.setState({ submissions: newSubmissions });
           });
       });
     });
   }
   generateFacilities(submission) {
     return (
-      <div style={{textAlign: 'center'}}>
+      <div style={{ textAlign: 'center' }}>
         {submission.isMale && <i className="em-svg em-man-raising-hand" />}
         {submission.isFemale && <i className="em-svg em-woman-raising-hand" />}
         {submission.hasWaterCooler && (
@@ -283,11 +292,31 @@ export default class Admin extends React.Component {
       },
     });
   }
+
   generateTable() {
-    return this.state.submissions.map((submission, i) => {
+    return this.state.submissions
+      .filter((unfilteredSubmission) => {
+        return this.state.showAcceptedReviews 
+          ? unfilteredSubmission
+          : unfilteredSubmission.status === 'pending' || unfilteredSubmission.status === 'rejected'
+      })
+      .map((submission, i) => {
       return (
         <React.Fragment key={i}>
           <TableRow>
+            <TableCell style={{ whiteSpace: "normal", wordWrap: "break-word" }}>
+              <ListItem style={{ justifyContent: 'center', textAlign: 'center', flexDirection: 'column', margin: 0, padding: 0 }}>
+
+                <Avatar src={submission.userPhoto} />
+                <Typography variant="body1" noWrap={true} style={{ fontSize: 15, maxWidth: 120 }}>
+                  <b>{submission.currentUser.name}</b>
+                </Typography>
+
+
+
+              </ListItem>
+
+            </TableCell>
             <TableCell>
               {submission.name + ' '}
 
@@ -295,17 +324,17 @@ export default class Admin extends React.Component {
               being previewed, then show hide button */}
               {submission.rowId !== this.state.previewRow ? (
                 <Button
-                  onClick={() => this.setState({previewRow: submission.rowId})}
+                  onClick={() => this.setState({ previewRow: submission.rowId })}
                   color="primary">
                   Preview
                 </Button>
               ) : (
-                <Button
-                  onClick={() => this.setState({previewRow: null})}
-                  color="secondary">
-                  Hide
+                  <Button
+                    onClick={() => this.setState({ previewRow: null })}
+                    color="secondary">
+                    Hide
                 </Button>
-              )}
+                )}
             </TableCell>
             <TableCell>{this.generateFacilities(submission)}</TableCell>
             <TableCell size="small">
@@ -315,7 +344,7 @@ export default class Admin extends React.Component {
                   defaultValue={submission.remarks}
                   fullWidth
                   margin="dense"
-                  inputProps={{style: {fontSize: 15}}}
+                  inputProps={{ style: { fontSize: 15 } }}
                   onChange={event => {
                     this.handleTextChange(event, submission.rowId);
                   }}
@@ -336,7 +365,7 @@ export default class Admin extends React.Component {
                 <Preview
                   submission={Object.assign(
                     {
-                      panorama: {url: submission.paranomaUrl},
+                      panorama: { url: submission.paranomaUrl },
                       facilities: {
                         hose: submission.hasHose,
                         showerHeads: submission.hasShowerHeads,
@@ -359,75 +388,86 @@ export default class Admin extends React.Component {
   }
   render() {
     return (
-      <Paper style={{margin: 20}}>
-        <Dialog
-          onClose={() => {
-            this.setState({approveDialogOpened: false});
-          }}
-          open={this.state.approveDialogOpened}>
-          <DialogTitle>Are you sure?</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              {'Do you really want to approve ' +
-                this.state.submissionToApprove.name +
-                ' with the remarks ' +
-                (this.state.remarks[this.state.submissionIndex]
-                  ? this.state.remarks[this.state.submissionIndex]
-                  : this.state.submissionToApprove.remarks) +
-                '?'}
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => this.approveSubmission()}>Approve</Button>
-            <Button
-              onClick={() => {
-                this.setState({approveDialogOpened: false});
-              }}>
-              Cancel
+      <Container style={{ padding: 0, textAlign: 'center' }}>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick = {() => this.setState({showAcceptedReviews : !this.state.showAcceptedReviews})}>
+          {(this.state.showAcceptedReviews ? "Hide " : "Show ") + "Accepted Reviews"}
+          </Button>
+        <Paper style={{ margin: 20 }}>
+          <Dialog
+            onClose={() => {
+              this.setState({ approveDialogOpened: false });
+            }}
+            open={this.state.approveDialogOpened}>
+            <DialogTitle>Are you sure?</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                {'Do you really want to approve ' +
+                  this.state.submissionToApprove.name +
+                  ' with the remarks ' +
+                  (this.state.remarks[this.state.submissionIndex]
+                    ? this.state.remarks[this.state.submissionIndex]
+                    : this.state.submissionToApprove.remarks) +
+                  '?'}
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => this.approveSubmission()}>Approve</Button>
+              <Button
+                onClick={() => {
+                  this.setState({ approveDialogOpened: false });
+                }}>
+                Cancel
             </Button>
-          </DialogActions>
-        </Dialog>
-        <Dialog
-          onClose={() => {
-            this.setState({rejectDialogOpened: false});
-          }}
-          open={this.state.rejectDialogOpened}>
-          <DialogTitle>Are you sure?</DialogTitle>
-          <DialogContent>
-            <DialogContentText>
-              {'Do you really want to reject ' +
-                this.state.submissionToReject.name +
-                ' with the remarks ' +
-                (this.state.remarks[this.state.submissionIndex]
-                  ? this.state.remarks[this.state.submissionIndex]
-                  : this.state.submissionToReject.remarks) +
-                '?'}
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => this.rejectSubmission()}>Reject</Button>
-            <Button
-              onClick={() => {
-                this.setState({rejectDialogOpened: false});
-              }}>
-              Cancel
+            </DialogActions>
+          </Dialog>
+          <Dialog
+            onClose={() => {
+              this.setState({ rejectDialogOpened: false });
+            }}
+            open={this.state.rejectDialogOpened}>
+            <DialogTitle>Are you sure?</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                {'Do you really want to reject ' +
+                  this.state.submissionToReject.name +
+                  ' with the remarks ' +
+                  (this.state.remarks[this.state.submissionIndex]
+                    ? this.state.remarks[this.state.submissionIndex]
+                    : this.state.submissionToReject.remarks) +
+                  '?'}
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => this.rejectSubmission()}>Reject</Button>
+              <Button
+                onClick={() => {
+                  this.setState({ rejectDialogOpened: false });
+                }}>
+                Cancel
             </Button>
-          </DialogActions>
-        </Dialog>
+            </DialogActions>
+          </Dialog>
 
-        <Table onRowSelection={this.onRowSelection}>
-          <TableHead>
-            <TableRow>
-              <TableCell>Location</TableCell>
-              <TableCell>Facilities</TableCell>
-              <TableCell>Remarks </TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Action</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>{this.generateTable()}</TableBody>
-        </Table>
-      </Paper>
+          <Table style={{ minWidth: 650 }}>
+            <TableHead>
+              <TableRow >
+                <TableCell>User</TableCell>
+                <TableCell>Location</TableCell>
+                <TableCell>Facilities</TableCell>
+                <TableCell>Remarks </TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Action</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>{this.generateTable()}</TableBody>
+          </Table>
+        </Paper>
+
+      </Container>
+
     );
   }
 }
