@@ -57,7 +57,7 @@ identification and navigation.
 
 #### Rejected submissions
 ![Rejected submission](https://i.imgur.com/0QzBnr5.png)
-1. All functionality "Submissions pending for review" are present here.
+1. All functionality from "Submissions pending for review" are present here.
 2. Additionally, reasons for rejection will be shown (upon a button click) and submission has to be edited before it will be reconsidered for approval.
 
 #### Approved submissions
