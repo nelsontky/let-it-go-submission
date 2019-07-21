@@ -65,4 +65,4 @@ identification and navigation.
 1. All functionality, except editing, from "Submissions pending for review" are present here.
 2. Upon approval, submission will then appear on the main Let It Go applications.
 3. Deleting an approved submission **does not** delete it from the main app. It would just delete it from your list of submissions.
- 1. Thus, approved submissions can be safely deleted.
+  1. Thus, approved submissions can be safely deleted.
