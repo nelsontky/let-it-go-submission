@@ -18,10 +18,10 @@ NUS community of course!)
 
 1. Sign in to your Google account.
  * Enjoy the toilet quotes if that is your thing :)
-1. Enter name of the toilet in the "Name" field.
+2. Enter name of the toilet in the "Name" field.
  * Toilet name should be something descriptive and unique. Examples can be
   seen from the main Let It Go app.
-1. For Latitude and Longtitude of toilet, click on the emded map and the
+3. For Latitude and Longtitude of toilet, click on the emded map and the
 coordinates of the clicked point will be automatically filled in the fields.
  * Alternatively, if you have allowed location permissions for this site, you
   can click on the "Set lat lon to current location button" and the fields will
@@ -30,8 +30,8 @@ coordinates of the clicked point will be automatically filled in the fields.
   target icon in the map and the map will pan to your location. Note that if
   location services are not enabled, your location will be shown as the middle
   of NUS and the "Set lat lon to current location" button will do nothing.
-1. Proceed to check the facilities present in the toilet.
-1. Select a panorama image to upload for your submission. Panoramas should be
+4. Proceed to check the facilities present in the toilet.
+5. Select a panorama image to upload for your submission. Panoramas should be
 < 5 megabytes and should be 180 degree photos. Panoramas should include the
 toilet entrances and as much of the surroundings as possible, so as to facilitate
 identification and navigation.
@@ -41,7 +41,7 @@ identification and navigation.
   ![Embed panorama](https://i.imgur.com/lP5MLQI.png)
  * Our panoramas were all taken with Panorama360 ([Google Play](https://play.google.com/store/apps/details?id=com.vtcreator.android360) | [App Store](https://apps.apple.com/us/app/360-panorama/id377342622))
  * You can use any camera application you want but **make sure panoramas are *180 degrees*!**
-1. Click on submit button, wait for the upload and you are done!
+6. Click on submit button, wait for the upload and you are done!
  * Submission button will be greyed out if image choosen is invalid or Name/Lat/Lon fields are empty.
 
 ## Manage your submissions
@@ -50,19 +50,19 @@ identification and navigation.
 #### Submissions pending for review
 ![Submission pending review](https://i.imgur.com/XSjnBz6.png)
 1. You can preview/edit/delete any submissions pending review.
-1. Previewing a submission will show how it will look like in the main application.
-1. Editing a submission will allow you to edit submission properties. A new panorama image can be uploaded if neccesary.
+2. Previewing a submission will show how it will look like in the main application.
+3. Editing a submission will allow you to edit submission properties. A new panorama image can be uploaded if neccesary.
  * Panorama can be reuploaded by checking the "Edit Panorama image" checkbox.
-1. Deleting a submission will not allow it to be reviewed and thus the submission will not be uploaded to the main Let It Go applications.
+4. Deleting a submission will not allow it to be reviewed and thus the submission will not be uploaded to the main Let It Go applications.
 
 #### Rejected submissions
 ![Rejected submission](https://i.imgur.com/0QzBnr5.png)
 1. All functionality "Submissions pending for review" are present here.
-1. Additionally, reasons for rejection will be shown (upon a button click) and submission has to be edited before it will be reconsidered for approval.
+2. Additionally, reasons for rejection will be shown (upon a button click) and submission has to be edited before it will be reconsidered for approval.
 
 #### Approved submissions
 ![Approved submission](https://i.imgur.com/9yWVkrr.png)
 1. All functionality, except editing, from "Submissions pending for review" are present here.
 2. Upon approval, submission will then appear on the main Let It Go applications.
 3. Deleting an approved submission **does not** delete it from the main app. It would just delete it from your list of submissions.
- * Thus, approved submissions can be safely deleted.
+ 1. Thus, approved submissions can be safely deleted.
