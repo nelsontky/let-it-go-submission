@@ -39,7 +39,7 @@ identification and navigation.
   ![Panorama](https://raw.githubusercontent.com/nelsontky/let-it-go/master/assets/paranomas/computing/COM1%20Level%202%20Student%20Area.jpg)
     * Panorama will be embed into a panorama viewer, making it look sick and slick :sunglasses:
   ![Embed panorama](https://i.imgur.com/lP5MLQI.png)
-    * Our panoramas were all taken with Panorama360 ([Google Play](https://play.google.com/store/apps/details?id=com.vtcreator.android360) | [App Store](https://apps.apple.com/us/app/360-panorama/id377342622))
+    * Our panoramas were all taken with Panorama360 ([Google Play](https://play.google.com/store/apps/details?id=com.vtcreator.android360) | [App Store](https://apps.apple.com/sg/app/panorama-360-camera/id1034161360))
     * You can use any camera application you want but **make sure panoramas are *180 degrees*!**
 6. Click on submit button, wait for the upload and you are done!
     * Submission button will be greyed out if image choosen is invalid or Name/Lat/Lon fields are empty.
