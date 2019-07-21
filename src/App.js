@@ -1,25 +1,25 @@
-import React from 'react';
-import Map from './components/map';
-import Submitted from './components/submitted';
-import Layout from './components/layout';
-import firebase from './utils/firebase';
-import Resizer from 'react-image-file-resizer';
+import React from "react";
+import Map from "./components/map";
+import Submitted from "./components/submitted";
+import Layout from "./components/layout";
+import firebase from "./utils/firebase";
+import Resizer from "react-image-file-resizer";
 
 // Material UI imports
-import TextField from '@material-ui/core/TextField';
-import Button from '@material-ui/core/Button';
-import Checkbox from '@material-ui/core/Checkbox';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
-import FormLabel from '@material-ui/core/FormLabel';
-import FormGroup from '@material-ui/core/FormGroup';
+import TextField from "@material-ui/core/TextField";
+import Button from "@material-ui/core/Button";
+import Checkbox from "@material-ui/core/Checkbox";
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import FormLabel from "@material-ui/core/FormLabel";
+import FormGroup from "@material-ui/core/FormGroup";
 
-const uniqid = require('uniqid');
+const uniqid = require("uniqid");
 
 class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      name: '',
+      name: "",
       lat: 0,
       lon: 0,
       myLat: 0,
@@ -40,7 +40,7 @@ class App extends React.Component {
       edit: false,
       panorama: {},
       editPanorama: false,
-      editDocId: '',
+      editDocId: ""
     };
 
     this.fileInput = React.createRef();
@@ -50,7 +50,7 @@ class App extends React.Component {
 
     // Document created by user
     this.doc = this.db
-      .collection('userSubmissions')
+      .collection("userSubmissions")
       .doc(this.props.currentUser.uid);
 
     this.handleInputChange = this.handleInputChange.bind(this);
@@ -65,22 +65,22 @@ class App extends React.Component {
   // Handles state of input forms
   handleInputChange(event) {
     const value =
-      event.target.type === 'checkbox'
+      event.target.type === "checkbox"
         ? event.target.checked
         : event.target.value;
 
-    if (event.target.name !== 'handicapped') {
+    if (event.target.name !== "handicapped") {
       // Any checkbox/input that is not the handicapped checkbox, set state
       // normally.
       this.setState({
-        [event.target.name]: value,
+        [event.target.name]: value
       });
     } else {
       // For handicapped checkbox, have to make sure that separateHandicapped
       // checkbox is unticked when handicapped checkbox is unticked.
       this.setState({
         [event.target.name]: value,
-        separateHandicapped: value && this.state.separateHandicapped,
+        separateHandicapped: value && this.state.separateHandicapped
       });
     }
   }
@@ -89,7 +89,7 @@ class App extends React.Component {
   handleMapClick(lat, lon) {
     this.setState({
       lat,
-      lon,
+      lon
     });
   }
 
@@ -98,7 +98,7 @@ class App extends React.Component {
   updateMyLocation(myLat, myLon) {
     this.setState({
       myLat,
-      myLon,
+      myLon
     });
   }
 
@@ -109,7 +109,7 @@ class App extends React.Component {
     event.preventDefault();
     this.setState({
       lat: this.state.myLat,
-      lon: this.state.myLon,
+      lon: this.state.myLon
     });
   }
 
@@ -119,7 +119,7 @@ class App extends React.Component {
     // If user is editing submission and does not choose to reupload panorama
     if (this.state.edit && !this.state.editPanorama) {
       this.doc
-        .collection('submissions')
+        .collection("submissions")
         .doc()
         .set({
           facilities: {
@@ -129,7 +129,7 @@ class App extends React.Component {
             male: this.state.male,
             separateHandicapped: this.state.separateHandicapped,
             showerHeads: this.state.showerHeads,
-            waterCooler: this.state.waterCooler,
+            waterCooler: this.state.waterCooler
           },
           lat: this.state.lat,
           lon: this.state.lon,
@@ -139,12 +139,12 @@ class App extends React.Component {
           panorama: this.state.panorama,
 
           date: new Date(Date.now()),
-          status: {approval: 'pending', remarks: ''},
+          status: { approval: "pending", remarks: "" }
         })
         .then(() => {
           // Delete old version.
           this.doc
-            .collection('submissions')
+            .collection("submissions")
             .doc(this.state.editDocId)
             .delete();
         })
@@ -157,7 +157,7 @@ class App extends React.Component {
         this.fileInput.current.files[0] == null ||
         !/image\/*/g.test(this.fileInput.current.files[0].type)
       ) {
-        alert('Please make sure file uploaded is an image');
+        alert("Please make sure file uploaded is an image");
       } else {
         // Resize images to max width of 4096 to support mobile, after resizing,
         // image will be uploaded and firestore storage entry would be created.
@@ -165,12 +165,12 @@ class App extends React.Component {
           this.fileInput.current.files[0],
           4096,
           4096,
-          'JPEG',
+          "JPEG",
           70,
           0,
           blob => {
             // Show submission progress.
-            this.setState({progressShown: true});
+            this.setState({ progressShown: true });
 
             // Sets file name, file name appended with a unique id to prevent
             // overwrites.
@@ -188,10 +188,10 @@ class App extends React.Component {
                 let progress =
                   (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
 
-                this.setState({progress});
+                this.setState({ progress });
               },
               err => {
-                this.setState({error: true});
+                this.setState({ error: true });
               },
               () => {
                 // Upload completed successfully
@@ -202,12 +202,12 @@ class App extends React.Component {
                     currentUser: {
                       name: this.props.currentUser.displayName,
                       photoURL: this.props.currentUser.photoURL,
-                      uid: this.props.currentUser.uid,
-                    },
+                      uid: this.props.currentUser.uid
+                    }
                   });
 
                   this.doc
-                    .collection('submissions')
+                    .collection("submissions")
                     .doc()
                     .set({
                       facilities: {
@@ -217,21 +217,21 @@ class App extends React.Component {
                         male: this.state.male,
                         separateHandicapped: this.state.separateHandicapped,
                         showerHeads: this.state.showerHeads,
-                        waterCooler: this.state.waterCooler,
+                        waterCooler: this.state.waterCooler
                       },
                       lat: this.state.lat,
                       lon: this.state.lon,
                       name: this.state.name.trim(),
-                      panorama: {url, fileName},
+                      panorama: { url, fileName },
                       date: new Date(Date.now()),
-                      status: {approval: 'pending', remarks: ''},
+                      status: { approval: "pending", remarks: "" }
                     })
                     .then(() => {
                       // If is editing submission, delete old version and old
                       // panorama
                       if (this.state.edit) {
                         this.doc
-                          .collection('submissions')
+                          .collection("submissions")
                           .doc(this.state.editDocId)
                           .delete();
 
@@ -239,17 +239,17 @@ class App extends React.Component {
                         this.storage
                           .ref()
                           .child(
-                            `${this.props.currentUser.uid}/${this.state.panorama.fileName}`,
+                            `${this.props.currentUser.uid}/${this.state.panorama.fileName}`
                           )
                           .delete();
                       }
                     })
                     .then(() => window.location.reload());
                 });
-              },
+              }
             );
           },
-          'blob',
+          "blob"
         );
       }
     }
@@ -258,10 +258,10 @@ class App extends React.Component {
   // Handle the deleting of submission. Meant to be passed as a prop
   // into <Submitted /> component.
   handleDelete(fileName, submissionId) {
-    if (window.confirm('Are you sure you want to delete this submission?')) {
+    if (window.confirm("Are you sure you want to delete this submission?")) {
       // Deletes document from firestore.
       this.doc
-        .collection('submissions')
+        .collection("submissions")
         .doc(submissionId)
         .delete()
         .then(() =>
@@ -270,7 +270,7 @@ class App extends React.Component {
             .ref()
             .child(`${this.props.currentUser.uid}/${fileName}`)
             .delete()
-            .then(() => window.location.reload()),
+            .then(() => window.location.reload())
         );
     }
   }
@@ -292,7 +292,7 @@ class App extends React.Component {
       lon: submission.lon,
       name: submission.name,
       panorama: submission.panorama,
-      editDocId: submissionId,
+      editDocId: submissionId
     });
   }
 
@@ -301,6 +301,13 @@ class App extends React.Component {
     return (
       <Layout>
         <h1>Submit to Let It Go</h1>
+        <a
+          href="https://github.com/nelsontky/let-it-go-submission/blob/master/HELPME.md"
+          target="__blank"
+          rel="noreferrer noopener"
+        >
+          How do I do this?!
+        </a>
         {this.state.edit && <h6>Editing submission</h6>}
         {/* Main form */}
         <form onSubmit={this.handleSubmit}>
@@ -312,7 +319,7 @@ class App extends React.Component {
             margin="normal"
             variant="outlined"
             InputLabelProps={{
-              shrink: true,
+              shrink: true
             }}
             name="name"
             onChange={this.handleInputChange}
@@ -325,7 +332,7 @@ class App extends React.Component {
           <br />
           {/* Lat input */}
           <TextField
-            style={{marginRight: '1em'}}
+            style={{ marginRight: "1em" }}
             label="Latitude"
             margin="normal"
             variant="outlined"
@@ -455,7 +462,7 @@ class App extends React.Component {
             accept="image/*"
             ref={this.fileInput}
             id="contained-button-file"
-            style={{display: 'none'}}
+            style={{ display: "none" }}
           />
 
           {/* Do not show upload Panorama button if in edit mode and
@@ -474,27 +481,29 @@ class App extends React.Component {
             color="primary"
             type="submit"
             disabled={
-              this.state.name === '' ||
+              this.state.name === "" ||
               this.state.lat === 0 ||
               this.state.lon === 0
-            }>
+            }
+          >
             Submit
           </Button>
           {/* Progress indicator */}
           <span>
             {this.state.progressShown &&
-              ' ' + Math.floor(this.state.progress) + '%'}
+              " " + Math.floor(this.state.progress) + "%"}
           </span>
           {/* Error indicator */}
           <p>
             {this.state.error &&
-              'An error occured, please refresh the page and try again'}
+              "An error occured, please refresh the page and try again"}
           </p>
           {this.state.edit && (
             <Button
               variant="contained"
               color="secondary"
-              onClick={() => window.location.reload()}>
+              onClick={() => window.location.reload()}
+            >
               Cancel
             </Button>
           )}
@@ -503,9 +512,10 @@ class App extends React.Component {
         <Button
           color="secondary"
           onClick={() =>
-            this.setState({submissionsShown: !this.state.submissionsShown})
-          }>
-          {`${this.state.submissionsShown ? 'Hide' : 'Show'} your submissions`}
+            this.setState({ submissionsShown: !this.state.submissionsShown })
+          }
+        >
+          {`${this.state.submissionsShown ? "Hide" : "Show"} your submissions`}
         </Button>
 
         {this.state.submissionsShown && (
