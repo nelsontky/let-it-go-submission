@@ -32,15 +32,15 @@ coordinates of the clicked point will be automatically filled in the fields.
   of NUS and the "Set lat lon to current location" button will do nothing.
 4. Proceed to check the facilities present in the toilet.
 5. Select a panorama image to upload for your submission. Panoramas should be
-< 5 megabytes and should be 180 degree photos. Panoramas should include the
+< 5 megabytes and should be 360 degree photos (Left to right). Panoramas should include the
 toilet entrances and as much of the surroundings as possible, so as to facilitate
 identification and navigation.
-    * Example of 180 degree photograph:
+    * Example of 360 degree photograph:
   ![Panorama](https://raw.githubusercontent.com/nelsontky/let-it-go/master/assets/paranomas/computing/COM1%20Level%202%20Student%20Area.jpg)
     * Panorama will be embed into a panorama viewer, making it look sick and slick :sunglasses:
   ![Embed panorama](https://i.imgur.com/lP5MLQI.png)
     * Our panoramas were all taken with Panorama360 ([Google Play](https://play.google.com/store/apps/details?id=com.vtcreator.android360) | [App Store](https://apps.apple.com/sg/app/panorama-360-camera/id1034161360))
-    * You can use any camera application you want but **make sure panoramas are *180 degrees*!**
+    * You can use any camera application you want but **make sure panoramas are *360 degrees left to right*!**
 6. Click on submit button, wait for the upload and you are done!
     * Submission button will be greyed out if image choosen is invalid or Name/Lat/Lon fields are empty.
 
