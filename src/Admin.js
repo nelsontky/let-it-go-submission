@@ -24,7 +24,10 @@ import {
   ListItem,
   Container,
   Typography,
+  IconButton,
 } from '@material-ui/core';
+import CheckIcon from '@material-ui/icons/Check'
+import ClearIcon from '@material-ui/icons/Clear'
 
 export default class Admin extends React.Component {
   constructor(props) {
@@ -43,6 +46,8 @@ export default class Admin extends React.Component {
       submissionToApprove: {},
       remarks: '',
       previewRow: null,
+      approveDialogOpened: false,
+      rejectDialogOpened: false,
 
       sortBy: 'date',
 
@@ -58,76 +63,57 @@ export default class Admin extends React.Component {
     this.submissionsDb.get().then(users => {
       users.forEach(userObj => {
         let user = userObj.data().currentUser.uid;
-        console.log(userObj.data().currentUser);
+        let userName = userObj.data().currentUser.name;
+        let userPhoto = userObj.data().currentUser.photoURL;
 
         this.submissionsDb
           .doc(user)
           .collection('submissions')
           .onSnapshot(querySnapshot => {
-            querySnapshot.forEach(submission => {
+            querySnapshot.docChanges().forEach(submission => {
               let obj = {
                 userUid: user,
-                currentUser: userObj.data().currentUser,
-                userPhoto: userObj.data().currentUser.photoURL,
-                docId: submission.id,
-                date: submission.data().date,
-                isFemale: submission.data().facilities.female,
-                isMale: submission.data().facilities.male,
-                isHandicapped: submission.data().facilities.handicapped,
-                isSeparateHandicapped: submission.data().facilities
+                currentUserName: userName,
+                userPhoto: userPhoto,
+                docId: submission.doc.id,
+                date: submission.doc.data().date,
+                isFemale: submission.doc.data().facilities.female,
+                isMale: submission.doc.data().facilities.male,
+                isHandicapped: submission.doc.data().facilities.handicapped,
+                isSeparateHandicapped: submission.doc.data().facilities
                   .separateHandicapped,
-                hasHose: submission.data().facilities.hose,
-                hasShowerHeads: submission.data().facilities.showerHeads,
-                hasWaterCooler: submission.data().facilities.waterCooler,
-                lat: submission.data().lat,
-                lon: submission.data().lon,
-                name: submission.data().name,
-                paranomaUrl: submission.data().panorama.url,
+                hasHose: submission.doc.data().facilities.hose,
+                hasShowerHeads: submission.doc.data().facilities.showerHeads,
+                hasWaterCooler: submission.doc.data().facilities.waterCooler,
+                lat: submission.doc.data().lat,
+                lon: submission.doc.data().lon,
+                name: submission.doc.data().name,
+                paranomaUrl: submission.doc.data().panorama.url,
 
                 // Needed for reupload of file
-                panoramaFileName: submission.data().panorama.fileName,
+                panoramaFileName: submission.doc.data().panorama.fileName,
 
                 // editing
-                status: submission.data().status.approval,
-                remarks: submission.data().status.remarks,
+                status: submission.doc.data().status.approval,
+                remarks: submission.doc.data().status.remarks,
               };
 
               if (!map.has(obj.docId)) {
                 map.set(obj.docId, true);
                 newSubmissions.push(obj);
               } else {
-                // if not in array then replace with the new updated one at the same position
+                let idToRemove = submission.doc.id;
+                let submissionToRemove = newSubmissions.find(
+                  element => element.docId === idToRemove,
+                );
+                let rowId = submissionToRemove.rowId;
+                newSubmissions[rowId] = obj
               }
             });
 
-            querySnapshot.docChanges().forEach(change => {
-              let idToRemove = change.doc.id;
-              let submissionToRemove = newSubmissions.find(
-                element => element.docId === idToRemove,
-              );
-              let rowId = submissionToRemove.rowId;
-              newSubmissions[rowId] = {
-                userUid: user,
-                docId: submissionToRemove.id,
-                date: change.doc.data().date,
-                isFemale: change.doc.data().facilities.female,
-                isMale: change.doc.data().facilities.male,
-                isHandicapped: change.doc.data().facilities.handicapped,
-                isSeparateHandicapped: change.doc.data().facilities
-                  .separateHandicapped,
-                hasHose: change.doc.data().facilities.hose,
-                hasShowerHeads: change.doc.data().facilities.showerHeads,
-                hasWaterCooler: change.doc.data().facilities.waterCooler,
-                lat: change.doc.data().lat,
-                lon: change.doc.data().lon,
-                name: change.doc.data().name,
-                paranomaUrl: change.doc.data().panorama.url,
 
-                // editing
-                status: change.doc.data().status.approval,
-                remarks: change.doc.data().status.remarks,
-              };
-            });
+            // Sorts by date by default
+            // newSubmissions.sort(compareByDate);
 
             let index = -1;
             newSubmissions.map(submission => {
@@ -136,18 +122,19 @@ export default class Admin extends React.Component {
               return submission;
             });
 
-            // Sorts by date by default
-            newSubmissions.sort(compareByDate);
 
-            this.setState({submissions: newSubmissions});
+            this.setState({ submissions: newSubmissions });
+            this.handleSorting({ target: { value: this.state.sortBy } })
           });
       });
+
     });
+
   }
 
   generateFacilities(submission) {
     return (
-      <div style={{textAlign: 'center'}}>
+      <div style={{ textAlign: 'center' }}>
         {submission.isMale && <i className="em-svg em-man-raising-hand" />}
         {submission.isFemale && <i className="em-svg em-woman-raising-hand" />}
         {submission.hasWaterCooler && (
@@ -160,33 +147,7 @@ export default class Admin extends React.Component {
     );
   }
 
-  submissionAction(index) {
-    const values = {
-      age: [10, 20, 30],
-    };
-    return (
-      <FormControl>
-        <Select
-          value={values.age}
-          onChange={event => {
-            let submission = this.state.submissions[index];
-            switch (event.target.value) {
-              case 'Approve':
-                this.triggerDialogToConfirmApprove(submission, index);
-                break;
-              case 'Reject':
-                this.handleRejectSubmissionClicked(submission, index);
-                break;
-              default:
-                break;
-            }
-          }}>
-          <MenuItem value={'Approve'}>Approve</MenuItem>
-          <MenuItem value={'Reject'}>Reject</MenuItem>
-        </Select>
-      </FormControl>
-    );
-  }
+
 
   triggerDialogToConfirmApprove(submission, index) {
     this.setState({
@@ -272,6 +233,7 @@ export default class Admin extends React.Component {
   }
 
   handleRejectSubmissionClicked(submission, index) {
+
     this.setState({
       rejectDialogOpened: true,
       submissionToReject: submission,
@@ -296,6 +258,9 @@ export default class Admin extends React.Component {
         this.setState({
           rejectDialogOpened: false,
         });
+      })
+      .catch((error) => {
+        alert("There is an error rejecting the submission: " + error)
       });
   }
 
@@ -310,20 +275,19 @@ export default class Admin extends React.Component {
   generateTable() {
     return this.state.submissions
       .filter(unfilteredSubmission => {
-        return this.state.showAcceptedReviews
+        return this.state.showApprovedReviews
           ? unfilteredSubmission
           : unfilteredSubmission.status === 'pending' ||
-              unfilteredSubmission.status === 'rejected';
+          unfilteredSubmission.status === 'rejected';
       })
       .map((submission, i) => {
         return (
           <React.Fragment key={i}>
             <TableRow>
-              <TableCell style={{whiteSpace: 'normal', wordWrap: 'break-word'}}>
+              <TableCell>
                 <ListItem
                   style={{
                     justifyContent: 'center',
-                    textAlign: 'center',
                     flexDirection: 'column',
                     margin: 0,
                     padding: 0,
@@ -332,8 +296,8 @@ export default class Admin extends React.Component {
                   <Typography
                     variant="body1"
                     noWrap={true}
-                    style={{fontSize: 15, maxWidth: 120}}>
-                    <b>{submission.currentUser.name}</b>
+                    style={{ fontSize: 15, maxWidth: 120 }}>
+                    <b>{submission.currentUserName}</b>
                   </Typography>
                 </ListItem>
               </TableCell>
@@ -345,18 +309,18 @@ export default class Admin extends React.Component {
                 {submission.rowId !== this.state.previewRow ? (
                   <Button
                     onClick={() =>
-                      this.setState({previewRow: submission.rowId})
+                      this.setState({ previewRow: submission.rowId })
                     }
                     color="primary">
                     Preview
                   </Button>
                 ) : (
-                  <Button
-                    onClick={() => this.setState({previewRow: null})}
-                    color="secondary">
-                    Hide
+                    <Button
+                      onClick={() => this.setState({ previewRow: null })}
+                      color="secondary">
+                      Hide
                   </Button>
-                )}
+                  )}
               </TableCell>
               <TableCell>
                 {submission.date.toDate().toLocaleString('default', {
@@ -372,12 +336,11 @@ export default class Admin extends React.Component {
                 {
                   <TextField
                     multiline
-                    defaultValue={submission.remarks}
-                    fullWidth
+                    value={this.state.remarks[submission.rowId] === undefined ? submission.remarks : this.state.remarks[submission.rowId]}
                     margin="dense"
-                    inputProps={{style: {fontSize: 15}}}
+                    inputProps={{ style: { fontSize: 15 } }}
                     onChange={event => {
-                      this.handleTextChange(event, submission.rowId);
+                      this.handleTextChange(event, submission.rowId)
                     }}
                   />
                 }
@@ -385,7 +348,15 @@ export default class Admin extends React.Component {
               <TableCell>
                 {submission.status == null ? 'Pending' : submission.status}{' '}
               </TableCell>
-              <TableCell>{this.submissionAction(submission.rowId)}</TableCell>
+              <TableCell>
+                <IconButton onClick = {() => this.triggerDialogToConfirmApprove(submission, submission.rowId)} style = {{padding:5}}>
+                  <CheckIcon />
+                </IconButton>
+                <IconButton onClick = {() => this.handleRejectSubmissionClicked(submission, submission.rowId)} style = {{padding:5}}>
+                  <ClearIcon />
+                </IconButton>
+
+              </TableCell>
             </TableRow>
 
             {/* Sets up preview, hacky way to fit zx 
@@ -396,7 +367,7 @@ export default class Admin extends React.Component {
                   <Preview
                     submission={Object.assign(
                       {
-                        panorama: {url: submission.paranomaUrl},
+                        panorama: { url: submission.paranomaUrl },
                         facilities: {
                           hose: submission.hasHose,
                           showerHeads: submission.hasShowerHeads,
@@ -435,27 +406,27 @@ export default class Admin extends React.Component {
         break;
     }
 
-    this.setState({submissions, sortBy: event.target.value});
+    this.setState({ submissions, sortBy: event.target.value });
   }
 
   render() {
     return (
-      <Container style={{padding: 0, textAlign: 'center'}}>
+      <Container style={{ padding: 0, textAlign: 'center' }}>
         <Button
           variant="contained"
           color="primary"
           onClick={() =>
             this.setState({
-              showAcceptedReviews: !this.state.showAcceptedReviews,
+              showApprovedReviews: !this.state.showApprovedReviews,
             })
           }>
-          {(this.state.showAcceptedReviews ? 'Hide ' : 'Show ') +
-            'Accepted Reviews'}
+          {(this.state.showApprovedReviews ? 'Hide ' : 'Show ') +
+            'Approved Reviews'}
         </Button>
-        <Paper style={{margin: 20}}>
+        <Paper style={{ margin: 20 }}>
           <Dialog
             onClose={() => {
-              this.setState({approveDialogOpened: false});
+              this.setState({ approveDialogOpened: false });
             }}
             open={this.state.approveDialogOpened}>
             <DialogTitle>Are you sure?</DialogTitle>
@@ -474,7 +445,7 @@ export default class Admin extends React.Component {
               <Button onClick={() => this.approveSubmission()}>Approve</Button>
               <Button
                 onClick={() => {
-                  this.setState({approveDialogOpened: false});
+                  this.setState({ approveDialogOpened: false });
                 }}>
                 Cancel
               </Button>
@@ -482,7 +453,7 @@ export default class Admin extends React.Component {
           </Dialog>
           <Dialog
             onClose={() => {
-              this.setState({rejectDialogOpened: false});
+              this.setState({ rejectDialogOpened: false });
             }}
             open={this.state.rejectDialogOpened}>
             <DialogTitle>Are you sure?</DialogTitle>
@@ -501,7 +472,7 @@ export default class Admin extends React.Component {
               <Button onClick={() => this.rejectSubmission()}>Reject</Button>
               <Button
                 onClick={() => {
-                  this.setState({rejectDialogOpened: false});
+                  this.setState({ rejectDialogOpened: false });
                 }}>
                 Cancel
               </Button>
@@ -513,7 +484,7 @@ export default class Admin extends React.Component {
             handleSorting={this.handleSorting}
           />
 
-          <Table style={{minWidth: 650}}>
+          <Table style={{ minWidth: 650 }}>
             <TableHead>
               <TableRow>
                 <TableCell>User</TableCell>
