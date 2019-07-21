@@ -3,6 +3,7 @@ import React from 'react';
 class Map extends React.Component {
   watchLocation() {
     if (navigator.geolocation) {
+      this.props.setLocationAvailable();
       this.id = navigator.geolocation.watchPosition(
         position => {
           const lat = position.coords.latitude;
@@ -13,14 +14,14 @@ class Map extends React.Component {
           this.accuracyRadius.setCenter({lat: lat, lng: lon});
           this.accuracyRadius.setRadius(position.coords.accuracy);
         },
-        () => console.log('No permission'),
+        () => this.props.setLocationNotAvailable(),
         {
           enableHighAccuracy: true,
         },
       );
     } else {
       // Browser doesn't support Geolocation
-      console.log('No permission');
+      this.props.setLocationNotAvailable();
     }
   }
 

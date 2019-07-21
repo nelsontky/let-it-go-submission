@@ -4,6 +4,7 @@ import Submitted from "./components/submitted";
 import Layout from "./components/layout";
 import firebase from "./utils/firebase";
 import Resizer from "react-image-file-resizer";
+import LocationHelp from "./components/locationHelp";
 
 // Material UI imports
 import TextField from "@material-ui/core/TextField";
@@ -35,6 +36,7 @@ class App extends React.Component {
       progressShown: false,
       error: false,
       submissionsShown: false,
+      isLocationAvailable: false,
 
       // Fields in charge of editing.
       edit: false,
@@ -57,6 +59,8 @@ class App extends React.Component {
     this.handleMapClick = this.handleMapClick.bind(this);
     this.updateMyLocation = this.updateMyLocation.bind(this);
     this.setToCurrentLocation = this.setToCurrentLocation.bind(this);
+    this.setLocationNotAvailable = this.setLocationNotAvailable.bind(this);
+    this.setLocationAvailable = this.setLocationAvailable.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
     this.handleEdit = this.handleEdit.bind(this);
     this.handleDelete = this.handleDelete.bind(this);
@@ -100,6 +104,15 @@ class App extends React.Component {
       myLat,
       myLon
     });
+  }
+
+  // Allows Map component to update App state
+  setLocationNotAvailable() {
+    this.setState({ isLocationAvailable: false });
+  }
+
+  setLocationAvailable() {
+    this.setState({ isLocationAvailable: true });
   }
 
   // Handles click on "Set Lat Lon to current location button". Does what
@@ -301,6 +314,7 @@ class App extends React.Component {
     return (
       <Layout>
         <h1>Submit to Let It Go</h1>
+        {!this.state.isLocationAvailable && <LocationHelp />}
         <a
           href="https://github.com/nelsontky/let-it-go-submission/blob/master/HELPME.md"
           target="__blank"
@@ -354,6 +368,8 @@ class App extends React.Component {
           <Map
             handleMapClick={this.handleMapClick}
             updateMyLocation={this.updateMyLocation}
+            setLocationAvailable={this.setLocationAvailable}
+            setLocationNotAvailable={this.setLocationNotAvailable}
           />
           <br />
           {/* Checkboxes */}

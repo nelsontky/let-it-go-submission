@@ -6,6 +6,7 @@
   "dependencies": {
     "@material-ui/core": "^4.2.0",
     "@material-ui/icons": "^4.2.1",
+    "@tippy.js/react": "^2.2.2",
     "compass-vertical-rhythm": "^1.4.5",
     "firebase": "^6.2.4",
     "gh-pages": "^2.0.1",
