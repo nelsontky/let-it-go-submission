@@ -45,7 +45,7 @@ identification and navigation.
     * Submission button will be greyed out if image choosen is invalid or Name/Lat/Lon fields are empty.
 
 ## Manage your submissions
-1. You can see all your submissions by clicking on the "Show your submissions" button.
+You can see all your submissions by clicking on the "Show your submissions" button.
 
 #### Submissions pending for review
 ![Submission pending review](https://i.imgur.com/XSjnBz6.png)
