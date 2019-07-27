@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/let-it-go-submission/precache-manifest.1c11f9f223d105c3650d66406135bb2f.js"
+  "/let-it-go-submission/precache-manifest.0f6965988ef2559a5dae6f2645714bdd.js"
 );
 
 self.addEventListener('message', (event) => {

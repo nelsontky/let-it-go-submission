@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.js": "/let-it-go-submission/static/js/main.3867b421.chunk.js",
-    "main.js.map": "/let-it-go-submission/static/js/main.3867b421.chunk.js.map",
+    "main.js": "/let-it-go-submission/static/js/main.650a7a2b.chunk.js",
+    "main.js.map": "/let-it-go-submission/static/js/main.650a7a2b.chunk.js.map",
     "runtime~main.js": "/let-it-go-submission/static/js/runtime~main.9283de88.js",
     "runtime~main.js.map": "/let-it-go-submission/static/js/runtime~main.9283de88.js.map",
-    "static/js/2.bb6e41ca.chunk.js": "/let-it-go-submission/static/js/2.bb6e41ca.chunk.js",
-    "static/js/2.bb6e41ca.chunk.js.map": "/let-it-go-submission/static/js/2.bb6e41ca.chunk.js.map",
+    "static/js/2.18f7bc9e.chunk.js": "/let-it-go-submission/static/js/2.18f7bc9e.chunk.js",
+    "static/js/2.18f7bc9e.chunk.js.map": "/let-it-go-submission/static/js/2.18f7bc9e.chunk.js.map",
     "index.html": "/let-it-go-submission/index.html",
-    "precache-manifest.1c11f9f223d105c3650d66406135bb2f.js": "/let-it-go-submission/precache-manifest.1c11f9f223d105c3650d66406135bb2f.js",
+    "precache-manifest.0f6965988ef2559a5dae6f2645714bdd.js": "/let-it-go-submission/precache-manifest.0f6965988ef2559a5dae6f2645714bdd.js",
     "service-worker.js": "/let-it-go-submission/service-worker.js"
   }
 }
