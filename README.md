@@ -4,7 +4,7 @@
 
 
 ## Purpose
-This submission portal allows users to submit their reviews to our database for the admins' approval. At the same time,admins are able to log in directly to approve/reject these submissions.
+This submission portal allows users to submit their reviews to our database for the admins' approval. At the same time, admins are able to log in directly to approve/reject these submissions.
 
 
 ## Demo
