@@ -39,7 +39,7 @@ After realising that it will be more cost-efficient and productive to let our us
 
 2. Organisation of Database 
 * Our initial organisation of our Cloud Firestore proved to be unnecessarily messy and complicated. We decided that it is a crucial time right now to properly organise how our data should be collected and structured in the Firestore, before a potential public release and submissions start to pour in. By then, restructuring of our data model will have been increasingly cumbersome. 
-  - [Our current Firestore data model is as shown here](https://github.com/nelsontky/let-it-go/blob/master/README.md]
+  - [Our current Firestore data model is as shown here](https://github.com/nelsontky/let-it-go/blob/master/README.md)
 
 
 
