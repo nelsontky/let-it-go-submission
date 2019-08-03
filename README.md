@@ -31,7 +31,7 @@ https://nelsontky.github.io/let-it-go-submission/
     * [More information on managing submissions.](https://github.com/nelsontky/let-it-go-submission/blob/master/HELPME.md#manage-your-submissions)
 * Admin panel for admins to approve/reject submission with remarks, along with ability to preview submissions.
     * As of now, only 2 admins exist: Me and my partner. :sunglasses:
-    * [Video demo of admin portal.](https://youtu.be/4WnngILnw18?t=70)
+    * [Video demo of admin portal.](https://youtu.be/YADOVkDN8HE?t=70)
 
 
 ## Bugs, problems encountered, and lessons learnt :(
